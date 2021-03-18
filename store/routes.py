@@ -1,8 +1,8 @@
-from flask import jsonify, request, abort, Response
-from werkzeug.routing import ValidationError
+from flask import jsonify, request
 
 from store import app, db
 from store.models.courier import Courier
+from store.models.order import Order
 
 
 @app.route('/couriers', methods=['POST'])
@@ -20,7 +20,7 @@ def post_courier():
         # else:
         #     raise ValidationError()
 
-    response = jsonify(couriers)
+    response = jsonify({'couriers': result_ids})
     response.status_code = 201
     return response
 
@@ -44,9 +44,25 @@ def patch_courier(courier_id):
     response.status_code = 200
     return response
 
+
 @app.route('/orders', methods=['POST'])
 def post_order():
-    return 'helllo'
+    orders = request.json
+
+    result_ids = []
+    for order in orders['data']:
+        if not Order.query.filter_by(order_id=order['order_id']).first():
+            new_order = Order()
+            new_order.from_dict(order)
+            db.session.add(new_order)
+            db.session.commit()
+            result_ids.append({'id': new_order.order_id})
+        # else:
+        #     raise ValidationError()
+
+    response = jsonify({'orders': result_ids})
+    response.status_code = 201
+    return response
 
 
 @app.route('/orders/assign', methods=['POST'])
