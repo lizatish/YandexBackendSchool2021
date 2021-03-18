@@ -1,44 +1,57 @@
-from flask import jsonify, request
+from flask import jsonify, request, abort, Response
+from werkzeug.routing import ValidationError
 
-from store import app
+from store import app, db
+from store.models.courier import Courier
 
 
 @app.route('/couriers', methods=['POST'])
-def couriers():
-    content = request.json
-    if content:
-        reference = content.get('schema').get('$ref')  # todo: проверить так ли забирается ссылка
+def post_courier():
+    couriers = request.json
 
-        if reference:
-            content = {
-                'schema': {'$ref': '#/components/schemas/CouriersIds'}
-            }
-            response = jsonify(content)
-            response.status_code = 200
-            response.status = 'Created'  # тут должно быть дескрипшн
-            response.mimetype = 'application/json'
-            return response
+    result_ids = []
+    for courier in couriers['data']:
+        if not Courier.query.filter_by(courier_id=courier['courier_id']).first():
+            new_courier = Courier()
+            new_courier.from_dict(courier)
+            db.session.add(new_courier)
+            db.session.commit()
+            result_ids.append({'id': new_courier.courier_id})
+        # else:
+        #     raise ValidationError()
 
-    content = {
-        'type': 'object',
-        'additionalProperties': 'false',
-        'properties':
-            {'validation_error':
-                 {'$ref': '#/components/schemas/CouriersIds'}},
-        'schema': {'$ref': '#/components/schemas/CouriersIds'},
-        'required': 'validation_error'
-    }
-    response = jsonify(content)
-    response.status_code = 400
-    response.status = 'Bad request'  # тут должно быть дескрипшн
-    response.mimetype = 'application/json'
+    response = jsonify(couriers)
+    response.status_code = 200
     return response
 
+
 @app.route('/couriers/{courier_id}', methods=['GET'])
-def api_couriers_get(courier_id):
-    path = request.args.get('in')
-    name = request.args.get('courier_id')
-    required = request.args.get('true')
-    schema_type = request.args.get('schema').get('type')
+def get_courier(courier_id):
+    courier = Courier.query.filter_by(id=courier_id).first()
+    if courier:
+        response = courier.to_dict()
+        response.status_code = 200
+        response.status = 'OK'
+        return response
+
+    return 'Not found', 404
 
 
+@app.route('/couriers/{courier_id}', methods=['PATCH'])
+def patch_courier(courier_id):
+    return 'helllo'
+
+
+@app.route('/orders', methods=['POST'])
+def post_order():
+    return 'helllo'
+
+
+@app.route('/orders/assign', methods=['POST'])
+def post_order_assign():
+    return 'helllo'
+
+
+@app.route('/orders/complete', methods=['POST'])
+def post_complete_assign():
+    return 'helllo'
