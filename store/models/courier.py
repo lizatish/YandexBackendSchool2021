@@ -1,8 +1,7 @@
 from store import db
-from store.models.serializator import JsonMixin
 
 
-class Courier(db.Model, JsonMixin):
+class Courier(db.Model):
     courier_id = db.Column(db.Integer, primary_key=True)
     courier_type = db.Column(db.String(30))
     regions = db.Column(db.ARRAY(db.Integer))
@@ -14,3 +13,15 @@ class Courier(db.Model, JsonMixin):
         for field in ['courier_id', 'courier_type', 'regions', 'working_hours']:
             if field in data:
                 setattr(self, field, data[field])
+
+    def to_dict(self, addition_info=False):
+        data = {
+            'courier_id': self.courier_id,
+            'courier_type': self.courier_type,
+            'regions': self.regions,
+            'working_hours': self.working_hours,
+        }
+        if addition_info:
+            data['rating'] = self.rating
+            data['earnings'] = self.earnings
+        return data

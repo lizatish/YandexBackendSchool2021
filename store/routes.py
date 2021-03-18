@@ -21,26 +21,28 @@ def post_courier():
         #     raise ValidationError()
 
     response = jsonify(couriers)
+    response.status_code = 201
+    return response
+
+
+@app.route('/couriers/<courier_id>', methods=['GET'])
+def get_courier(courier_id):
+    courier = Courier.query.get_or_404(courier_id)
+    response = jsonify(courier.to_dict(addition_info=True))
     response.status_code = 200
     return response
 
 
-@app.route('/couriers/{courier_id}', methods=['GET'])
-def get_courier(courier_id):
-    courier = Courier.query.filter_by(id=courier_id).first()
-    if courier:
-        response = courier.to_dict()
-        response.status_code = 200
-        response.status = 'OK'
-        return response
-
-    return 'Not found', 404
-
-
-@app.route('/couriers/{courier_id}', methods=['PATCH'])
+@app.route('/couriers/<courier_id>', methods=['PATCH'])
 def patch_courier(courier_id):
-    return 'helllo'
+    data = request.json
+    courier = Courier.query.get_or_404(courier_id)
+    courier.from_dict(data)
+    db.session.commit()
 
+    response = jsonify(courier.to_dict())
+    response.status_code = 200
+    return response
 
 @app.route('/orders', methods=['POST'])
 def post_order():
