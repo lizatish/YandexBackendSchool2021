@@ -1,10 +1,11 @@
 from store import db
+from store.models.courier_type import CourierType
 from store.models.order import Order
 
 
 class Courier(db.Model):
     courier_id = db.Column(db.Integer, primary_key=True, unique=True)
-    courier_type = db.Column(db.String(30))
+    courier_type = db.Column(db.Enum(CourierType))
     regions = db.Column(db.ARRAY(db.Integer))
     working_hours = db.Column(db.ARRAY(db.String(30)))
     rating = db.Column(db.Integer)
@@ -15,7 +16,10 @@ class Courier(db.Model):
     def from_dict(self, data):
         for field in ['courier_id', 'courier_type', 'regions', 'working_hours']:
             if field in data:
-                setattr(self, field, data[field])
+                if field == 'courier_type':
+                    self.courier_type = CourierType.get_type(data[field])
+                else:
+                    setattr(self, field, data[field])
 
     def to_dict(self, addition_info=False):
         data = {
