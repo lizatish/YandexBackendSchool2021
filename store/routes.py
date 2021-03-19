@@ -1,9 +1,10 @@
+from datetime import datetime
+
 from flask import jsonify, request
 
 from store import app, db
 from store.models.courier import Courier
 from store.models.courier_assign_time import CourierAssignTime
-from store.models.courier_type import CourierType
 from store.models.order import Order
 from store.models.order_assign_time import OrderAssignTime
 
@@ -23,7 +24,7 @@ def post_courier():
 
     response = jsonify({'couriers': result_ids})
     response.status_code = 201
-    return response
+    return responsegit
 
 
 @app.route('/couriers/<courier_id>', methods=['GET'])
@@ -89,7 +90,7 @@ def post_order_assign():
             for order_time in order_assign_times:
                 if courier.current_weight + order.weight <= courier.max_weight:
 
-                    if courier_time.time_start_hour >= order_time.time_finish_hour :
+                    if courier_time.time_start_hour >= order_time.time_finish_hour:
                         continue
                     elif order_time.time_start_hour >= courier_time.time_finish_hour:
                         continue
@@ -103,7 +104,10 @@ def post_order_assign():
                     order.courier_id:
                 break
 
-    db.session.commit()
+    if orders_idx:
+        db.session.commit()
+        # TODO привести в правильный формат дату
+        return jsonify({'orders': orders_idx, 'assign_time': datetime.utcnow()})
     return jsonify({'orders': orders_idx})
 
 
