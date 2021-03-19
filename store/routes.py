@@ -2,8 +2,10 @@ from flask import jsonify, request
 
 from store import app, db
 from store.models.courier import Courier
+from store.models.courier_assign_time import CourierAssignTime
 from store.models.courier_type import CourierType
 from store.models.order import Order
+from store.models.order_assign_time import OrderAssignTime
 
 
 @app.route('/couriers', methods=['POST'])
@@ -56,8 +58,6 @@ def post_order():
             db.session.add(new_order)
             db.session.commit()
             result_ids.append({'id': new_order.order_id})
-        # else:
-        #     raise ValidationError()
 
     response = jsonify({'orders': result_ids})
     response.status_code = 201
@@ -73,19 +73,34 @@ def post_order_assign():
         Order.courier_id == None,
         Order.is_complete == False,
         Order.region.in_(courier.regions)
-    ).order_by(Order.time_start_hour, Order.time_start_min, Order.time_finish_hour, Order.time_finish_min).all()
+    ).all()
 
     orders_idx = []
-    max_weight = CourierType.max_weight(courier.courier_type)
     for order in orders:
-        for courier_time in courier.assign_times:
-            if order.weight < max_weight:
-                if courier_time.time_start_hour <= order.time_start_hour and \
-                        courier_time.time_start_min <= order.time_start_min or \
-                        courier_time.time_finish_hour >= order.time_finish_hour and \
-                        courier_time.time_finish_min >= order.time_finish_min:
+        order_assign_times = OrderAssignTime.query.filter(
+            OrderAssignTime.order_id == order.order_id
+        ).order_by(OrderAssignTime.time_start_hour, OrderAssignTime.time_start_min,
+                   OrderAssignTime.time_finish_hour, OrderAssignTime.time_finish_min).all()
+
+        courier_assign_times = CourierAssignTime.query.filter(
+            CourierAssignTime.courier_id == courier.courier_id).all()
+
+        for courier_time in courier_assign_times:
+            for order_time in order_assign_times:
+                if courier.current_weight + order.weight <= courier.max_weight:
+
+                    if courier_time.time_start_hour >= order_time.time_finish_hour :
+                        continue
+                    elif order_time.time_start_hour >= courier_time.time_finish_hour:
+                        continue
+
                     orders_idx.append({'id': order.order_id})
                     order.courier_id = courier.courier_id
+                    break
+                else:
+                    break
+            if courier.current_weight + order.weight == courier.max_weight or \
+                    order.courier_id:
                 break
 
     db.session.commit()

@@ -16,7 +16,7 @@ class CourierType(enum.Enum):
             return CourierType.CAR
 
     @staticmethod
-    def max_weight(type):
+    def get_max_weight(type):
         if type == CourierType.FOOT:
             return 10
         elif type == CourierType.BIKE:

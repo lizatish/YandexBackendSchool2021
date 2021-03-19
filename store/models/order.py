@@ -1,34 +1,30 @@
+from typing import List
+
 from store import db
+from store.models.order_assign_time import OrderAssignTime
 
 
 class Order(db.Model):
-    order_id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, primary_key=True, unique=True)
     courier_id = db.Column(db.Integer, db.ForeignKey('courier.courier_id'))
 
     weight = db.Column(db.Integer)
     region = db.Column(db.Integer)
 
-    time_start_hour = db.Column(db.Integer)
-    time_start_min = db.Column(db.Integer)
-    time_finish_hour = db.Column(db.Integer)
-    time_finish_min = db.Column(db.Integer)
-
     is_complete = db.Column(db.Boolean, default=False)
     complete_time = db.Column(db.DateTime)
+
+    assign_times: List[OrderAssignTime] = db.relationship(OrderAssignTime, backref=db.backref('courier'))
 
     def from_dict(self, data):
         for field in ['order_id', 'weight', 'region', 'delivery_hours']:
             if field in data:
                 if field == 'delivery_hours':
                     for working_hour in data[field]:
-                        self.set_delivery_hours(working_hour)
+                        assign_time = OrderAssignTime(working_hour, data['order_id'])
+                        db.session.add(assign_time)
                 else:
                     setattr(self, field, data[field])
-
-    def set_delivery_hours(self, delivery_hours):
-        data = delivery_hours.split('-')
-        self.time_start_hour, self.time_start_min = [int(k) for k in data[0].split(':')]
-        self.time_finish_hour, self.time_finish_min = [int(k) for k in data[1].split(':')]
 
     def to_dict(self):
         data = {
@@ -40,5 +36,4 @@ class Order(db.Model):
         return data
 
     def get_working_hours(self):
-        return f'{str(self.time_start_hour).rjust(2, "0")}:{str(self.time_start_min).rjust(2, "0")}-' \
-               f'{str(self.time_finish_hour).rjust(2, "0")}:{str(self.time_finish_min).rjust(2, "0")}'
+        return [str(assign_time) for assign_time in self.assign_times]

@@ -10,8 +10,11 @@ class Courier(db.Model):
     courier_id = db.Column(db.Integer, primary_key=True, unique=True)
     courier_type = db.Column(db.Enum(CourierType))
     regions = db.Column(db.ARRAY(db.Integer))
-    rating = db.Column(db.Integer)
-    earnings = db.Column(db.Integer)
+    rating = db.Column(db.Integer, default=0)
+    earnings = db.Column(db.Integer, default=0)
+
+    current_weight = db.Column(db.Integer, default=0)
+    max_weight = db.Column(db.Integer)
 
     orders = db.relationship(Order, backref=db.backref('courier'))
     assign_times: List[CourierAssignTime] = db.relationship(CourierAssignTime, backref=db.backref('courier'))
@@ -21,6 +24,7 @@ class Courier(db.Model):
             if field in data:
                 if field == 'courier_type':
                     self.courier_type = CourierType.get_type(data[field])
+                    self.max_weight = CourierType.get_max_weight(self.courier_type)
                 elif field == 'working_hours':
                     for working_hour in data[field]:
                         assign_time = CourierAssignTime(working_hour, data['courier_id'])
