@@ -13,8 +13,7 @@ class Order(db.Model, JsonMixin):
     is_complete = db.Column(db.Boolean, default=False)
     is_assign = db.Column(db.Boolean, default=False)
 
-
     def from_dict(self, data):
-        for field in ['order_id', 'weight', 'regions', 'delivery_hours']:
+        for field in ['order_id', 'weight', 'region', 'delivery_hours']:
             if field in data:
                 setattr(self, field, data[field])

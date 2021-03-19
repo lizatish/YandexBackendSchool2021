@@ -67,6 +67,17 @@ def post_order():
 
 @app.route('/orders/assign', methods=['POST'])
 def post_order_assign():
+    data = request.json
+    courier = Courier.query.get(data['courier_id'])
+    if courier:
+        orders = Order.query.filter(
+            Order.is_complete == False,
+            Order.region.in_([1, 22, 12])
+        ).order_by(Order.delivery_hours).all()
+        print(orders)
+        print(orders[0].delivery_hours)
+        return 'helllo'
+
     return 'helllo'
 
 
