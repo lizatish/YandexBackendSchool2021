@@ -2,6 +2,7 @@ from flask import jsonify, request
 
 from store import app, db
 from store.models.courier import Courier
+from store.models.courier_assign_time import CourierAssignTime
 from store.models.order import Order
 
 
@@ -16,9 +17,9 @@ def post_courier():
             new_courier.from_dict(courier)
             db.session.add(new_courier)
             db.session.commit()
+
             result_ids.append({'id': new_courier.courier_id})
-        # else:
-        #     raise ValidationError()
+
 
     response = jsonify({'couriers': result_ids})
     response.status_code = 201

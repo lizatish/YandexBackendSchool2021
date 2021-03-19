@@ -22,6 +22,10 @@ class Courier(db.Model):
                     self.courier_type = CourierType.get_type(data[field])
                 else:
                     setattr(self, field, data[field])
+        for working_hour in data['working_hours']:
+            assign_time = CourierAssignTime(working_hour, data['courier_id'])
+            db.session.add(assign_time)
+
 
     def to_dict(self, addition_info=False):
         data = {
