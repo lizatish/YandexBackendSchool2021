@@ -2,6 +2,7 @@ from flask import jsonify, request
 
 from store import app, db
 from store.models.courier import Courier
+from store.models.courier_type import CourierType
 from store.models.order import Order
 
 
@@ -67,18 +68,36 @@ def post_order():
 def post_order_assign():
     data = request.json
     courier = Courier.query.get(data['courier_id'])
-    if courier:
-        orders = Order.query.filter(
-            Order.is_complete == False,
-            Order.region.in_([1, 22, 12])
-        ).order_by(Order.delivery_hours).all()
-        print(orders)
-        print(orders[0].delivery_hours)
-        return 'helllo'
 
-    return 'helllo'
+    orders = Order.query.filter(
+        Order.courier_id == None,
+        Order.is_complete == False,
+        Order.region.in_(courier.regions)
+    ).order_by(Order.time_start_hour, Order.time_start_min, Order.time_finish_hour, Order.time_finish_min).all()
+
+    orders_idx = []
+    max_weight = CourierType.max_weight(courier.courier_type)
+    for order in orders:
+        for courier_time in courier.assign_times:
+            if order.weight < max_weight:
+                if courier_time.time_start_hour <= order.time_start_hour and \
+                        courier_time.time_start_min <= order.time_start_min or \
+                        courier_time.time_finish_hour >= order.time_finish_hour and \
+                        courier_time.time_finish_min >= order.time_finish_min:
+                    orders_idx.append({'id': order.order_id})
+                    order.courier_id = courier.courier_id
+                break
+
+    db.session.commit()
+    return jsonify({'orders': orders_idx})
 
 
 @app.route('/orders/complete', methods=['POST'])
 def post_complete_assign():
-    return 'helllo'
+    data = request.json
+    order = Order.query.get(data['order_id'])
+    if order.courier_id == data['courier_id']:
+        order.is_complete = True
+        order.complete_time = data['complete_time']
+        return jsonify({'order_id': order.order_id})
+    return jsonify(''), 400

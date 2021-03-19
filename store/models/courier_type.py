@@ -6,11 +6,20 @@ class CourierType(enum.Enum):
     BIKE = "bike"
     CAR = "car"
 
-    @classmethod
-    def get_type(cls, type):
+    @staticmethod
+    def get_type(type):
         if type == 'foot':
             return CourierType.FOOT
         elif type == 'bike':
             return CourierType.BIKE
         elif type == 'car':
             return CourierType.CAR
+
+    @staticmethod
+    def max_weight(type):
+        if type == CourierType.FOOT:
+            return 10
+        elif type == CourierType.BIKE:
+            return 15
+        elif type == CourierType.CAR:
+            return 50
