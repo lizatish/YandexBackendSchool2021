@@ -2,9 +2,9 @@ import enum
 
 
 class CourierType(enum.Enum):
-    FOOT = 10
-    BIKE = 15
-    CAR = 50
+    FOOT = "foot"
+    BIKE = "bike"
+    CAR = "car"
 
     @classmethod
     def get_type(cls, type):
@@ -14,4 +14,3 @@ class CourierType(enum.Enum):
             return CourierType.BIKE
         elif type == 'car':
             return CourierType.CAR
-
