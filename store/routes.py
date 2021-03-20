@@ -6,8 +6,10 @@ from flask import jsonify, request, abort
 from store import app, db
 from store.models.courier import Courier
 from store.models.order import Order
+from store.shemas.courier_id import CourierId
 from store.shemas.courier_item import CourierItem
 from store.shemas.courier_post_request import CouriersPostRequest
+from store.shemas.order_complete import OrderComplete
 from store.shemas.order_post_request import OrdersPostRequest
 
 
@@ -114,22 +116,47 @@ def post_order():
 @app.route('/orders/assign', methods=['POST'])
 def post_order_assign():
     data = request.json
-    courier = Courier.query.get(data['courier_id'])
 
-    orders_idx = courier.balancer_orders()
+    validator = jsonschema.Draft7Validator(CourierId)
+    errors = validator.iter_errors(data)
+    for error in errors:
+        abort(400)
+
+    courier = Courier.query.get(data['courier_id'])
+    if not courier:
+        abort(400)
+
+    orders_idx = []
+    orders = Order.query.filter_by(courier_id=courier.courier_id).all()
+    if orders:
+        for order in orders:
+            orders_idx.append({'id': order.order_id})
+    else:
+        orders_idx = courier.balancer_orders()
+
     if orders_idx:
         db.session.commit()
-        # TODO привести в правильный формат дату
-        return jsonify({'orders': orders_idx, 'assign_time': datetime.utcnow()})
+        return jsonify({
+            'orders': orders_idx,
+            'assign_time': datetime.utcnow().strftime('%Y-%m-%dT%-H:%M:%S.%f'[:-3] + 'Z')
+        })
     return jsonify({'orders': orders_idx})
 
 
 @app.route('/orders/complete', methods=['POST'])
 def post_complete_assign():
     data = request.json
+
+    validator = jsonschema.Draft7Validator(OrderComplete)
+    errors = validator.iter_errors(data)
+    for error in errors:
+        abort(400)
+
     order = Order.query.get(data['order_id'])
-    if order.courier_id == data['courier_id']:
-        order.is_complete = True
-        order.complete_time = data['complete_time']
-        return jsonify({'order_id': order.order_id})
-    return jsonify(''), 400
+    if not order or order.courier_id != data['courier_id']:
+        abort(400)
+
+    order.is_complete = True
+    order.complete_time = data['complete_time']
+    db.session.commit()
+    return jsonify({'order_id': order.order_id}), 200
