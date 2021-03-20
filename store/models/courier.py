@@ -119,6 +119,9 @@ class Courier(db.Model):
 
             for courier_time in courier_assign_times:
                 for order_time in order_assign_times:
+                    if self.current_weight + order.weight >= self.max_weight:
+                        not_intersections.append(order)
+                        break
 
                     if courier_time.time_start_hour >= order_time.time_finish_hour:
                         not_intersections.append(order)
