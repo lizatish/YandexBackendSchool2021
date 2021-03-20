@@ -2,57 +2,20 @@ from datetime import datetime
 
 import jsonschema
 from flask import jsonify, request
-from flask_expects_json import expects_json
-from jsonschema import Draft4Validator, validate
 
 from store import app, db
+from store.json_shemas import CouriersPostRequest
 from store.models.courier import Courier
 from store.models.courier_assign_time import CourierAssignTime
 from store.models.order import Order
 from store.models.order_assign_time import OrderAssignTime
-
-schema = {
-    'type': 'object',
-    'properties': {
-        'data': {
-            'type': 'array',
-            'items': {
-                'type': 'object',
-                'properties': {
-                    'courier_id': {
-                        'type': 'integer',
-                        'minimum': 0
-                    },
-                    'courier_type': {
-                        'type': 'string',
-                        'enum': ['foot', 'bike', 'car']
-                    },
-                    'regions': {
-                        'type': 'array',
-                        'minItems': 1,
-                        'items': {'type': 'integer', 'minimum': 0}
-                    },
-                    'working_hours': {
-                        'type': 'array',
-                        "minItems": 1,
-                        'items': {
-                            'type': 'string',
-                            "pattern": '^[0-9]{2}[:]{1}[0-9]{2}[-]{1}[0-9]{2}[:]{1}[0-9]{2}$',
-                        }
-                    }},
-                'required': ['courier_id', 'courier_type', 'regions', 'working_hours']
-            }
-        }
-    },
-    'required': ['data']
-}
 
 
 @app.route('/couriers', methods=['POST'])
 def post_courier():
     couriers = request.json
 
-    validator = jsonschema.Draft7Validator(schema)
+    validator = jsonschema.Draft7Validator(CouriersPostRequest)
     errors = validator.iter_errors(couriers)
     errors_idxs = list()
     for error in errors:
@@ -69,11 +32,14 @@ def post_courier():
             new_courier = Courier()
             new_courier.from_dict(courier)
             db.session.add(new_courier)
-            db.session.commit()
-            result_ids.append({'id': new_courier.courier_id})
+            result_ids.append({'id': idx + 1})
         else:
-            errors_idxs.append(idx)
+            errors_idxs.append({'id': idx + 1})
 
+    if errors_idxs:
+        return jsonify({'validation_error': {'couriers': list(errors_idxs)}})
+
+    db.session.commit()
     response = jsonify({'couriers': result_ids})
     response.status_code = 201
     return response
