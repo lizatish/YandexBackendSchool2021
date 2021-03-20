@@ -69,6 +69,9 @@ def patch_courier(courier_id):
         abort(400)
 
     courier.edit(data)
+    orders_not_intersect = courier.check_time_not_intersection()
+    for order in orders_not_intersect:
+        order.courier_id = None
     db.session.commit()
 
     response = jsonify(courier.to_dict())
@@ -115,40 +118,7 @@ def post_order_assign():
     data = request.json
     courier = Courier.query.get(data['courier_id'])
 
-    orders = Order.query.filter(
-        Order.courier_id == None,
-        Order.is_complete == False,
-        Order.region.in_(courier.regions)
-    ).all()
-
-    orders_idx = []
-    for order in orders:
-        order_assign_times = OrderAssignTime.query.filter(
-            OrderAssignTime.order_id == order.order_id
-        ).order_by(OrderAssignTime.time_start_hour, OrderAssignTime.time_start_min,
-                   OrderAssignTime.time_finish_hour, OrderAssignTime.time_finish_min).all()
-
-        courier_assign_times = CourierAssignTime.query.filter(
-            CourierAssignTime.courier_id == courier.courier_id).all()
-
-        for courier_time in courier_assign_times:
-            for order_time in order_assign_times:
-                if courier.current_weight + order.weight <= courier.max_weight:
-
-                    if courier_time.time_start_hour >= order_time.time_finish_hour:
-                        continue
-                    elif order_time.time_start_hour >= courier_time.time_finish_hour:
-                        continue
-
-                    orders_idx.append({'id': order.order_id})
-                    order.courier_id = courier.courier_id
-                    break
-                else:
-                    break
-            if courier.current_weight + order.weight == courier.max_weight or \
-                    order.courier_id:
-                break
-
+    orders_idx = courier.balancer_orders()
     if orders_idx:
         db.session.commit()
         # TODO привести в правильный формат дату

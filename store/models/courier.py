@@ -4,6 +4,7 @@ from store import db
 from store.models.courier_assign_time import CourierAssignTime
 from store.models.courier_type import CourierType
 from store.models.order import Order
+from store.models.order_assign_time import OrderAssignTime
 
 
 class Courier(db.Model):
@@ -61,3 +62,71 @@ class Courier(db.Model):
 
     def get_working_hours(self):
         return [str(assign_time) for assign_time in self.assign_times]
+
+    def balancer_orders(self):
+        orders = Order.query.filter(
+            Order.courier_id == None,
+            Order.is_complete == False,
+            Order.region.in_(self.regions)
+        ).all()
+
+        orders_idx = []
+        for order in orders:
+            order_assign_times = OrderAssignTime.query.filter(
+                OrderAssignTime.order_id == order.order_id
+            ).order_by(OrderAssignTime.time_start_hour, OrderAssignTime.time_start_min,
+                       OrderAssignTime.time_finish_hour, OrderAssignTime.time_finish_min).all()
+
+            courier_assign_times = CourierAssignTime.query.filter(
+                CourierAssignTime.courier_id == self.courier_id).all()
+
+            for courier_time in courier_assign_times:
+                for order_time in order_assign_times:
+                    if self.current_weight + order.weight <= self.max_weight:
+
+                        if courier_time.time_start_hour >= order_time.time_finish_hour:
+                            continue
+                        elif order_time.time_start_hour >= courier_time.time_finish_hour:
+                            continue
+
+                        orders_idx.append({'id': order.order_id})
+                        order.courier_id = self.courier_id
+                        break
+                    else:
+                        break
+                if self.current_weight + order.weight == self.max_weight or \
+                        order.courier_id:
+                    break
+        return orders_idx
+
+    def check_time_not_intersection(self):
+
+        not_intersections = []
+
+        orders = Order.query.filter(
+            Order.courier_id == self.courier_id,
+            Order.is_complete == False
+        ).all()
+
+        for order in orders:
+            order_assign_times = OrderAssignTime.query.filter(
+                OrderAssignTime.order_id == order.order_id
+            ).order_by(OrderAssignTime.time_start_hour, OrderAssignTime.time_start_min,
+                       OrderAssignTime.time_finish_hour, OrderAssignTime.time_finish_min).all()
+
+            courier_assign_times = CourierAssignTime.query.filter(
+                CourierAssignTime.courier_id == self.courier_id).all()
+
+            for courier_time in courier_assign_times:
+                for order_time in order_assign_times:
+
+                    if courier_time.time_start_hour >= order_time.time_finish_hour:
+                        not_intersections.append(order)
+                        break
+                    elif order_time.time_start_hour >= courier_time.time_finish_hour:
+                        not_intersections.append(order)
+                        break
+                if order in not_intersections:
+                    break
+
+        return not_intersections
