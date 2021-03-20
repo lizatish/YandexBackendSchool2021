@@ -1,13 +1,11 @@
 from datetime import datetime
 
 import jsonschema
-from flask import jsonify, request, Response, abort
+from flask import jsonify, request, abort
 
 from store import app, db
 from store.models.courier import Courier
-from store.models.courier_assign_time import CourierAssignTime
 from store.models.order import Order
-from store.models.order_assign_time import OrderAssignTime
 from store.shemas.courier_item import CourierItem
 from store.shemas.courier_post_request import CouriersPostRequest
 from store.shemas.order_post_request import OrdersPostRequest

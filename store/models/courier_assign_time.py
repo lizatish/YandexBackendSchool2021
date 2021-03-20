@@ -1,8 +1,7 @@
 from store import db
-from store.models.serializator import JsonMixin
 
 
-class CourierAssignTime(db.Model, JsonMixin):
+class CourierAssignTime(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     time_start_hour = db.Column(db.Integer)
     time_start_min = db.Column(db.Integer)

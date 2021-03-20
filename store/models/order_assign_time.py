@@ -1,8 +1,7 @@
 from store import db
-from store.models.serializator import JsonMixin
 
 
-class OrderAssignTime(db.Model, JsonMixin):
+class OrderAssignTime(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('order.order_id'))
 
