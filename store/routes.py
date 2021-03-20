@@ -4,11 +4,12 @@ import jsonschema
 from flask import jsonify, request
 
 from store import app, db
-from store.json_shemas import CouriersPostRequest
 from store.models.courier import Courier
 from store.models.courier_assign_time import CourierAssignTime
 from store.models.order import Order
 from store.models.order_assign_time import OrderAssignTime
+from store.shemas.courier_post_request import CouriersPostRequest
+from store.shemas.order_post_request import OrdersPostRequest
 
 
 @app.route('/couriers', methods=['POST'])
@@ -69,15 +70,31 @@ def patch_courier(courier_id):
 def post_order():
     orders = request.json
 
+    validator = jsonschema.Draft7Validator(OrdersPostRequest)
+    errors = validator.iter_errors(orders)
+    errors_idxs = list()
+    for error in errors:
+        error_elem = {'id': error.path[1] + 1}
+        if error_elem not in errors_idxs:
+            errors_idxs.append(error_elem)
+    if errors_idxs:
+        return jsonify({'validation_error': {'orders': list(errors_idxs)}})
+
     result_ids = []
-    for order in orders['data']:
-        if not Order.query.filter_by(order_id=order['order_id']).first():
+    for idx, order in enumerate(orders['data']):
+        temp = Order.query.get(order['order_id'])
+        if not temp:
             new_order = Order()
             new_order.from_dict(order)
             db.session.add(new_order)
-            db.session.commit()
-            result_ids.append({'id': new_order.order_id})
+            result_ids.append({'id': idx + 1})
+        else:
+            errors_idxs.append({'id': idx + 1})
 
+    if errors_idxs:
+        return jsonify({'validation_error': {'orders': list(errors_idxs)}})
+
+    db.session.commit()
     response = jsonify({'orders': result_ids})
     response.status_code = 201
     return response
