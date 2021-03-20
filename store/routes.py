@@ -1,13 +1,14 @@
 from datetime import datetime
 
 import jsonschema
-from flask import jsonify, request
+from flask import jsonify, request, Response, abort
 
 from store import app, db
 from store.models.courier import Courier
 from store.models.courier_assign_time import CourierAssignTime
 from store.models.order import Order
 from store.models.order_assign_time import OrderAssignTime
+from store.shemas.courier_item import CourierItem
 from store.shemas.courier_post_request import CouriersPostRequest
 from store.shemas.order_post_request import OrdersPostRequest
 
@@ -57,8 +58,17 @@ def get_courier(courier_id):
 @app.route('/couriers/<courier_id>', methods=['PATCH'])
 def patch_courier(courier_id):
     data = request.json
-    courier = Courier.query.get_or_404(courier_id)
-    courier.from_dict(data)
+
+    validator = jsonschema.Draft7Validator(CourierItem)
+    errors = validator.iter_errors(data)
+    for error in errors:
+        abort(400)
+
+    courier = Courier.query.get(courier_id)
+    if not courier:
+        abort(400)
+
+    courier.edit(data)
     db.session.commit()
 
     response = jsonify(courier.to_dict())

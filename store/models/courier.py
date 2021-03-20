@@ -32,6 +32,21 @@ class Courier(db.Model):
                 else:
                     setattr(self, field, data[field])
 
+    def edit(self, data):
+        for field in ['courier_type', 'regions', 'working_hours']:
+            if field in data:
+                if field == 'courier_type':
+                    self.courier_type = CourierType.get_type(data[field])
+                    self.max_weight = CourierType.get_max_weight(self.courier_type)
+                elif field == 'working_hours':
+                    for working_hour in data[field]:
+                        for old_assign_time in self.assign_times:
+                            db.session.delete(old_assign_time)
+                        assign_time = CourierAssignTime(working_hour, self.courier_id)
+                        db.session.add(assign_time)
+                else:
+                    setattr(self, field, data[field])
+
     def to_dict(self, addition_info=False):
         data = {
             'courier_id': self.courier_id,
