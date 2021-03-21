@@ -13,6 +13,7 @@ class Order(db.Model):
 
     is_complete = db.Column(db.Boolean, default=False)
     complete_time = db.Column(db.DateTime)
+    assign_time = db.Column(db.DateTime)
 
     assign_times: List[OrderAssignTime] = db.relationship(OrderAssignTime, backref=db.backref('courier'))
 

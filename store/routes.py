@@ -4,6 +4,7 @@ import jsonschema
 from flask import jsonify, request, abort
 
 from store import app, db
+from store.models.completed_order import CompletedOrder
 from store.models.courier import Courier
 from store.models.order import Order
 from store.shemas.courier_id import CourierId
@@ -126,19 +127,23 @@ def post_order_assign():
     if not courier:
         abort(400)
 
+    courier.balancer_orders()
+
     orders_idx = []
-    orders = Order.query.filter_by(courier_id=courier.courier_id).all()
-    if orders:
-        for order in orders:
-            orders_idx.append({'id': order.order_id})
-    else:
-        orders_idx = courier.balancer_orders()
+    orders = Order.query.filter(
+        Order.courier_id == courier.courier_id,
+        Order.is_complete == False
+    ).all()
+    assign_time = datetime.utcnow().strftime('%Y-%m-%dT%-H:%M:%S.%f'[:-3] + 'Z')
+    for order in orders:
+        order.assign_time = assign_time
+        orders_idx.append({'id': order.order_id})
 
     if orders_idx:
         db.session.commit()
         return jsonify({
             'orders': orders_idx,
-            'assign_time': datetime.utcnow().strftime('%Y-%m-%dT%-H:%M:%S.%f'[:-3] + 'Z')
+            'assign_time': assign_time
         })
     return jsonify({'orders': orders_idx})
 
@@ -158,5 +163,13 @@ def post_complete_assign():
 
     order.is_complete = True
     order.complete_time = data['complete_time']
+
+    complete_order = CompletedOrder.query.get(order.courier_id)
+    if not complete_order:
+        complete_order = CompletedOrder(
+            courier_id=order.courier_id,
+            completed_orders=1,
+            # min_time=order.
+        )
     db.session.commit()
     return jsonify({'order_id': order.order_id}), 200

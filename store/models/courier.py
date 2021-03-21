@@ -1,6 +1,7 @@
 from typing import List
 
 from store import db
+from store.models.completed_order import CompletedOrder
 from store.models.courier_assign_time import CourierAssignTime
 from store.models.courier_type import CourierType
 from store.models.order import Order
@@ -17,7 +18,9 @@ class Courier(db.Model):
     current_weight = db.Column(db.Integer, default=0)
     max_weight = db.Column(db.Integer)
 
-    orders = db.relationship(Order, backref=db.backref('courier'))
+    orders: List[Order] = db.relationship(Order, backref=db.backref('courier'))
+    completed_orders: List[CompletedOrder] = db.relationship(CompletedOrder, backref=db.backref('courier'))
+
     assign_times: List[CourierAssignTime] = db.relationship(CourierAssignTime, backref=db.backref('courier'))
 
     def from_dict(self, data):
@@ -70,7 +73,6 @@ class Courier(db.Model):
             Order.region.in_(self.regions)
         ).all()
 
-        orders_idx = []
         for order in orders:
             order_assign_times = OrderAssignTime.query.filter(
                 OrderAssignTime.order_id == order.order_id
@@ -89,7 +91,6 @@ class Courier(db.Model):
                         elif order_time.time_start_hour >= courier_time.time_finish_hour:
                             continue
 
-                        orders_idx.append({'id': order.order_id})
                         order.courier_id = self.courier_id
                         break
                     else:
@@ -97,7 +98,6 @@ class Courier(db.Model):
                 if self.current_weight + order.weight == self.max_weight or \
                         order.courier_id:
                     break
-        return orders_idx
 
     def check_time_not_intersection(self):
 
@@ -133,3 +133,12 @@ class Courier(db.Model):
                     break
 
         return not_intersections
+
+    def calculate_rating(self):
+        Order.query.filter(
+            Order.courier_id == self.courier_id,
+            Order.is_complete == True
+        ).all()
+
+        t = None
+        self.rating = (60 * 60 - min(t, 60 * 60)) / (60 * 60) * 5
