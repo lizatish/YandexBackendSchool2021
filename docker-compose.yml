@@ -2,7 +2,7 @@ version: '3'
 services:
   master:
     container_name: master
-#    command: start
+    command: start
     build:
       context: .
       dockerfile: Dockerfile
@@ -18,7 +18,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - postgres_data:/database_data
     environment:
         - POSTGRES_USER=postgres
         - POSTGRES_PASSWORD=postgres
