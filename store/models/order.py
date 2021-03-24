@@ -1,6 +1,7 @@
 from typing import List
 
 from store import db
+from store.models.completed_order import CompletedOrder
 from store.models.order_assign_time import OrderAssignTime
 
 
@@ -15,7 +16,8 @@ class Order(db.Model):
     complete_time = db.Column(db.DateTime)
     assign_time = db.Column(db.DateTime)
 
-    assign_times: List[OrderAssignTime] = db.relationship(OrderAssignTime, backref=db.backref('courier'))
+    assign_times: List[OrderAssignTime] = db.relationship(OrderAssignTime, backref=db.backref('order'))
+    completedOrders = db.relationship(CompletedOrder, backref=db.backref('order'))
 
     def from_dict(self, data):
         for field in ['order_id', 'weight', 'region', 'delivery_hours']:

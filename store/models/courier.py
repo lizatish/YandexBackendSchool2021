@@ -19,7 +19,7 @@ class Courier(db.Model):
     max_weight = db.Column(db.Integer)
 
     orders: List[Order] = db.relationship(Order, backref=db.backref('courier'))
-    completed_orders: List[CompletedOrder] = db.relationship(CompletedOrder, backref=db.backref('courier'))
+    completed_orders = db.relationship(CompletedOrder, backref=db.backref('courier'))
 
     assign_times: List[CourierAssignTime] = db.relationship(CourierAssignTime, backref=db.backref('courier'))
 

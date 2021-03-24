@@ -161,15 +161,23 @@ def post_complete_assign():
     if not order or order.courier_id != data['courier_id']:
         abort(400)
 
-    order.is_complete = True
-    order.complete_time = data['complete_time']
+    if not order.is_complete:
+        order.is_complete = True
+        order.complete_time = data['complete_time']
 
-    complete_order = CompletedOrder.query.get(order.courier_id)
-    if not complete_order:
-        complete_order = CompletedOrder(
-            courier_id=order.courier_id,
-            completed_orders=1,
-            # min_time=order.
-        )
-    db.session.commit()
+        complete_order = CompletedOrder.query.get(order.courier_id)
+        if not complete_order:
+            complete_order = CompletedOrder(
+                courier_id=order.courier_id,
+                completed_orders=1,
+                min_time=order.complete_time - order.assign_time,
+                last_order_id=order.order_id
+            )
+            db.session.add(complete_order)
+        else:
+            complete_order.completed_orders += 1
+            complete_order.min_time = min(complete_order.min_time, )
+            complete_order.last_order_id = order.order_id
+
+        db.session.commit()
     return jsonify({'order_id': order.order_id}), 200
