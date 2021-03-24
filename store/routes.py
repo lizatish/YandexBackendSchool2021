@@ -5,7 +5,7 @@ from flask import jsonify, request, abort
 from flask_expects_json import expects_json
 
 from store import app, db
-from store.models.completed_order import CompletedOrder
+from store.models.completed_order import CompletedOrders
 from store.models.courier import Courier
 from store.models.order import Order
 from store.shemas.courier_id import CourierId
@@ -52,7 +52,13 @@ def post_courier():
 @app.route('/couriers/<courier_id>', methods=['GET'])
 def get_courier(courier_id):
     courier = Courier.query.get_or_404(courier_id)
-    response = jsonify(courier.to_dict(addition_info=True))
+
+    json_data = courier.to_dict()
+    if courier.completed_orders:
+        json_data['rating'] = courier.calculate_rating()
+        json_data['earnings'] = courier.calculate_earnings()
+
+    response = jsonify(json_data)
     response.status_code = 200
     return response
 
@@ -167,21 +173,25 @@ def post_complete_assign():
         order.complete_time = data['complete_time']
         db.session.commit()
 
-        complete_order = CompletedOrder.query.filter_by(courier_id=order.courier_id).first()
+        complete_order = CompletedOrders.query.filter(
+            CompletedOrders.courier_id == order.courier_id,
+            CompletedOrders.region == order.region
+        ).first()
         if not complete_order:
-            complete_order = CompletedOrder(
+            complete_order = CompletedOrders(
                 courier_id=order.courier_id,
                 completed_orders=1,
-                min_time=(order.complete_time - order.assign_time).total_seconds(),
-                last_complete_time=order.complete_time
+                last_complete_time=order.complete_time,
+                general_complete_seconds=(order.complete_time - order.assign_time).total_seconds(),
+                region=order.region
             )
             db.session.add(complete_order)
         else:
+            total_secs = (order.complete_time - complete_order.last_complete_time).total_seconds()
             complete_order.completed_orders += 1
-            complete_order.min_time = min(
-                complete_order.min_time,
-                (order.complete_time - complete_order.last_complete_time).total_seconds())
             complete_order.last_complete_time = order.complete_time
+            complete_order.general_complete_seconds += total_secs
+
         db.session.commit()
 
     return jsonify({'order_id': order.order_id}), 200

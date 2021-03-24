@@ -1,7 +1,8 @@
+from math import inf
 from typing import List
 
 from store import db
-from store.models.completed_order import CompletedOrder
+from store.models.completed_order import CompletedOrders
 from store.models.courier_assign_time import CourierAssignTime
 from store.models.courier_type import CourierType
 from store.models.order import Order
@@ -17,8 +18,7 @@ class Courier(db.Model):
     max_weight = db.Column(db.Integer)
 
     orders: List[Order] = db.relationship(Order, backref=db.backref('courier'))
-    completed_orders = db.relationship(CompletedOrder, backref=db.backref('courier'))
-
+    completed_orders: List[CompletedOrders] = db.relationship(CompletedOrders, backref=db.backref('courier'))
     assign_times: List[CourierAssignTime] = db.relationship(CourierAssignTime, backref=db.backref('courier'))
 
     def from_dict(self, data):
@@ -49,16 +49,13 @@ class Courier(db.Model):
                 else:
                     setattr(self, field, data[field])
 
-    def to_dict(self, addition_info=False):
+    def to_dict(self):
         data = {
             'courier_id': self.courier_id,
             'courier_type': self.courier_type.value,
             'regions': self.regions,
             'working_hours': self.get_working_hours(),
         }
-        if addition_info:
-            data['rating'] = self.rating
-            data['earnings'] = self.earnings
         return data
 
     def get_working_hours(self):
@@ -133,12 +130,15 @@ class Courier(db.Model):
         return not_intersections
 
     def calculate_rating(self):
-        if self.completed_orders:
-            t = self.completed_orders.min_time
-            rating = (60 * 60 - min(t, 60 * 60)) / (60 * 60) * 5
-            return rating
+        t = inf
+        for order in self.completed_orders:
+            average_t = order.general_complete_seconds / order.completed_orders
+            t = min(t, average_t)
+        rating = (60 * 60 - min(t, 60 * 60)) / (60 * 60) * 5
+        return float(f"{rating:.2f}")
 
     def calculate_earnings(self):
-        if self.completed_orders:
-            sum_orders = self.completed_orders.completed_orders * CourierType.get_coefficient(self.courier_type)
-            return sum_orders
+        sum_orders = 0
+        for order in self.completed_orders:
+            sum_orders += 500 * order.completed_orders * CourierType.get_coefficient(self.courier_type)
+        return sum_orders
