@@ -23,3 +23,12 @@ class CourierType(enum.Enum):
             return 15
         elif type == CourierType.CAR:
             return 50
+
+    @staticmethod
+    def get_coefficient(type):
+        if type == CourierType.FOOT:
+            return 2
+        elif type == CourierType.BIKE:
+            return 5
+        elif type == CourierType.CAR:
+            return 9

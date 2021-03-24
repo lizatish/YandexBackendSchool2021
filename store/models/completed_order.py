@@ -6,4 +6,4 @@ class CompletedOrder(db.Model):
     courier_id = db.Column(db.Integer, db.ForeignKey('courier.courier_id'))
     completed_orders = db.Column(db.Integer, default=0)
     min_time = db.Column(db.Integer)
-    last_order_id = db.Column(db.Integer, db.ForeignKey('order.order_id'))
+    last_complete_time = db.Column(db.DateTime)

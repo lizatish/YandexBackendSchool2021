@@ -12,8 +12,6 @@ class Courier(db.Model):
     courier_id = db.Column(db.Integer, primary_key=True, unique=True)
     courier_type = db.Column(db.Enum(CourierType))
     regions = db.Column(db.ARRAY(db.Integer))
-    rating = db.Column(db.Integer, default=0)
-    earnings = db.Column(db.Integer, default=0)
 
     current_weight = db.Column(db.Integer, default=0)
     max_weight = db.Column(db.Integer)
@@ -135,10 +133,12 @@ class Courier(db.Model):
         return not_intersections
 
     def calculate_rating(self):
-        Order.query.filter(
-            Order.courier_id == self.courier_id,
-            Order.is_complete == True
-        ).all()
+        if self.completed_orders:
+            t = self.completed_orders.min_time
+            rating = (60 * 60 - min(t, 60 * 60)) / (60 * 60) * 5
+            return rating
 
-        t = None
-        self.rating = (60 * 60 - min(t, 60 * 60)) / (60 * 60) * 5
+    def calculate_earnings(self):
+        if self.completed_orders:
+            sum_orders = self.completed_orders.completed_orders * CourierType.get_coefficient(self.courier_type)
+            return sum_orders
