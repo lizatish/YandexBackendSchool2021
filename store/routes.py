@@ -2,6 +2,7 @@ from datetime import datetime
 
 import jsonschema
 from flask import jsonify, request, abort
+from flask_expects_json import expects_json
 
 from store import app, db
 from store.models.completed_order import CompletedOrder
@@ -119,8 +120,8 @@ def post_order_assign():
     data = request.json
 
     validator = jsonschema.Draft7Validator(CourierId)
-    errors = validator.iter_errors(data)
-    for error in errors:
+    errors = list(validator.iter_errors(data))
+    if errors:
         abort(400)
 
     courier = Courier.query.get(data['courier_id'])
@@ -153,8 +154,8 @@ def post_complete_assign():
     data = request.json
 
     validator = jsonschema.Draft7Validator(OrderComplete)
-    errors = validator.iter_errors(data)
-    for error in errors:
+    errors = list(validator.iter_errors(data))
+    if errors:
         abort(400)
 
     order = Order.query.get(data['order_id'])
@@ -166,12 +167,12 @@ def post_complete_assign():
         order.complete_time = data['complete_time']
         db.session.commit()
 
-        complete_order = CompletedOrder.query.get(order.courier_id)
+        complete_order = CompletedOrder.query.filter_by(courier_id=order.courier_id).first()
         if not complete_order:
             complete_order = CompletedOrder(
                 courier_id=order.courier_id,
                 completed_orders=1,
-                min_time=(order.complete_time - order.assign_time).seconds,
+                min_time=(order.complete_time - order.assign_time).total_seconds(),
                 last_complete_time=order.complete_time
             )
             db.session.add(complete_order)
@@ -179,7 +180,7 @@ def post_complete_assign():
             complete_order.completed_orders += 1
             complete_order.min_time = min(
                 complete_order.min_time,
-                (order.complete_time - complete_order.last_complete_time).seconds)
+                (order.complete_time - complete_order.last_complete_time).total_seconds())
             complete_order.last_complete_time = order.complete_time
         db.session.commit()
 
