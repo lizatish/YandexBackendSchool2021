@@ -1,7 +1,8 @@
-version: '3'
+version: '2.4'
 services:
   master:
     container_name: master
+    restart: always
     build:
       context: .
       dockerfile: build/Dockerfile
@@ -10,14 +11,21 @@ services:
     env_file:
       - env/master.env
     depends_on:
-      - database
+      database:
+        condition: service_healthy
   database:
     image: postgres:10
     container_name: database
+    restart: always
     ports:
       - 5432:5432
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
     env_file:
       - env/database.env
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
