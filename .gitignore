@@ -12,7 +12,6 @@ postgres_data/
 # Distribution / packaging
 .Python
 env/
-build/
 develop-eggs/
 dist/
 downloads/
@@ -131,6 +130,7 @@ pip-selfcheck.json
 
 .idea/
 
+## File-based project format:
 ## File-based project format:
 *.iws
 
