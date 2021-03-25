@@ -1,0 +1,27 @@
+version: '3'
+services:
+  master:
+    container_name: master
+    command: start
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '8080:8080'
+    env_file:
+      - env/master.env
+    depends_on:
+      - database
+  database:
+    image: postgres:10
+    container_name: database
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/database_data
+    environment:
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=postgres
+        - POSTGRES_DB=yandex_store
+volumes:
+  postgres_data:
