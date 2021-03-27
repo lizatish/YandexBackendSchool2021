@@ -3,7 +3,7 @@ import requests
 url = 'http://127.0.0.1:5000/couriers'
 
 
-def check_base_400(input, output):
+def check_base_400(input, output, messages_num):
     assert output.status_code == 400
     json_response = output.json()
     validation_error = json_response.get('validation_error')
@@ -19,8 +19,10 @@ def check_base_400(input, output):
     assert description is not None
     assert len(description) == 1
     assert description[0].get('id') == input['data'][0]['courier_id']
-    assert description[0].get('messages') is not None
-    assert len(description) == 1
+
+    messages = description[0].get('messages')
+    assert messages is not None
+    assert len(messages) == messages_num
 
 
 def test_validation_error1_couriers():
@@ -34,7 +36,7 @@ def test_validation_error1_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
 
 
 def test_validation_error2_couriers():
@@ -48,7 +50,7 @@ def test_validation_error2_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
 
 
 def test_validation_error3_couriers():
@@ -62,7 +64,7 @@ def test_validation_error3_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
 
 
 def test_validation_error4_couriers():
@@ -77,7 +79,7 @@ def test_validation_error4_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
 
 
 def test_validation_error5_couriers():
@@ -92,7 +94,7 @@ def test_validation_error5_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
 
 
 def test_validation_error6_couriers():
@@ -107,7 +109,7 @@ def test_validation_error6_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
 
 
 def test_validation_error7_couriers():
@@ -122,7 +124,7 @@ def test_validation_error7_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
 
 
 def test_validation_error8_couriers():
@@ -137,7 +139,7 @@ def test_validation_error8_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
 
 
 def test_validation_error9_couriers():
@@ -152,7 +154,7 @@ def test_validation_error9_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 2)
 
 
 def test_validation_error10_couriers():
@@ -167,7 +169,7 @@ def test_validation_error10_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 2)
 
 
 def test_validation_error11_couriers():
@@ -182,7 +184,7 @@ def test_validation_error11_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
 
 
 def test_validation_error12_couriers():
@@ -197,7 +199,7 @@ def test_validation_error12_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
 
 
 def test_validation_error13_couriers():
@@ -212,7 +214,7 @@ def test_validation_error13_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
 
 
 def test_validation_error14_couriers():
@@ -227,7 +229,7 @@ def test_validation_error14_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
 
 
 def test_validation_error15_couriers():
@@ -242,7 +244,7 @@ def test_validation_error15_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
 
 
 def test_validation_error16_couriers():
@@ -257,7 +259,7 @@ def test_validation_error16_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
 
 
 def test_validation_error17_couriers():
@@ -272,7 +274,7 @@ def test_validation_error17_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
 
 
 def test_validation_error18_couriers():
@@ -287,7 +289,8 @@ def test_validation_error18_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
+
 
 def test_validation_error19_couriers():
     json = {
@@ -301,7 +304,8 @@ def test_validation_error19_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
+
 
 def test_validation_error20_couriers():
     json = {
@@ -315,7 +319,8 @@ def test_validation_error20_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
+
 
 def test_validation_error21_couriers():
     json = {
@@ -329,7 +334,8 @@ def test_validation_error21_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
+
 
 def test_validation_error22_couriers():
     json = {
@@ -343,7 +349,8 @@ def test_validation_error22_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
+
 
 def test_validation_error23_couriers():
     json = {
@@ -357,7 +364,8 @@ def test_validation_error23_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
+
 
 def test_validation_error24_couriers():
     json = {
@@ -371,7 +379,8 @@ def test_validation_error24_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
+
 
 def test_validation_error25_couriers():
     json = {
@@ -385,7 +394,8 @@ def test_validation_error25_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
+
 
 def test_validation_error26_couriers():
     json = {
@@ -399,4 +409,20 @@ def test_validation_error26_couriers():
         ]
     }
     response = requests.post(url=url, json=json)
-    check_base_400(json, response)
+    check_base_400(json, response, 1)
+
+
+def test_validation_error27_couriers():
+    json = {
+        "data": [
+            {
+                "courier_id": 1,
+                "123123": 1,
+                "courier_type": "car",
+                "regions": [1, 12, 22],
+                "working_hours": ["11:05-14:05"]
+            }
+        ]
+    }
+    response = requests.post(url=url, json=json)
+    check_base_400(json, response, 1)
