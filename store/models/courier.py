@@ -35,19 +35,18 @@ class Courier(db.Model):
                     setattr(self, field, data[field])
 
     def edit(self, data):
-        for field in ['courier_type', 'regions', 'working_hours']:
-            if field in data:
-                if field == 'courier_type':
-                    self.courier_type = CourierType.get_type(data[field])
-                    self.max_weight = CourierType.get_max_weight(self.courier_type)
-                elif field == 'working_hours':
-                    for working_hour in data[field]:
-                        for old_assign_time in self.assign_times:
-                            db.session.delete(old_assign_time)
-                        assign_time = CourierAssignTime(working_hour, self.courier_id)
-                        db.session.add(assign_time)
-                else:
-                    setattr(self, field, data[field])
+        for field in data:
+            if field == 'courier_type':
+                self.courier_type = CourierType.get_type(data[field])
+                self.max_weight = CourierType.get_max_weight(self.courier_type)
+            elif field == 'working_hours':
+                for working_hour in data[field]:
+                    for old_assign_time in self.assign_times:
+                        db.session.delete(old_assign_time)
+                    assign_time = CourierAssignTime(working_hour, self.courier_id)
+                    db.session.add(assign_time)
+            else:
+                setattr(self, field, data[field])
 
     def to_dict(self):
         data = {
@@ -68,6 +67,7 @@ class Courier(db.Model):
             Order.region.in_(self.regions)
         ).all()
 
+        new_orders = []
         for order in orders:
             order_assign_times = OrderAssignTime.query.filter(
                 OrderAssignTime.order_id == order.order_id
@@ -87,12 +87,15 @@ class Courier(db.Model):
                             continue
 
                         order.courier_id = self.courier_id
+                        new_orders.append(order)
+
                         break
                     else:
                         break
                 if self.current_weight + order.weight == self.max_weight or \
                         order.courier_id:
                     break
+        return new_orders
 
     def check_time_not_intersection(self):
 
@@ -116,12 +119,15 @@ class Courier(db.Model):
                 for order_time in order_assign_times:
                     if self.current_weight + order.weight >= self.max_weight:
                         not_intersections.append(order)
+                        self.current_weight -= order.weight
                         break
 
                     if courier_time.time_start_hour >= order_time.time_finish_hour:
+                        self.current_weight -= order.weight
                         not_intersections.append(order)
                         break
                     elif order_time.time_start_hour >= courier_time.time_finish_hour:
+                        self.current_weight -= order.weight
                         not_intersections.append(order)
                         break
                 if order in not_intersections:
@@ -139,6 +145,9 @@ class Courier(db.Model):
 
     def calculate_earnings(self):
         sum_orders = 0
+        if not self.completed_orders:
+            return sum_orders
+
         for order in self.completed_orders:
             sum_orders += 500 * order.completed_orders * CourierType.get_coefficient(self.courier_type)
         return sum_orders

@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import jsonschema
-from flask import jsonify, request, abort
+from flask import jsonify, request
 
 from store import app, db
 from store.models.completed_order import CompletedOrders
@@ -9,9 +9,7 @@ from store.models.courier import Courier
 from store.models.order import Order
 from store.shemas.courier_id import CourierId
 from store.shemas.courier_item import CourierItem
-from store.shemas.courier_post_request import CouriersPostRequest
 from store.shemas.order_complete import OrderComplete
-from store.shemas.order_post_request import OrdersPostRequest
 from store.tools import check_courier_validation
 
 
@@ -19,12 +17,13 @@ from store.tools import check_courier_validation
 def post_courier():
     couriers = request.json
 
-    validation_errors = check_courier_validation(couriers)
+    validation_errors = check_courier_validation(couriers, 'courier')
     if validation_errors:
         return validation_errors
 
     errors_idxs = list()
-    result_idxs = []
+    result_idxs = list()
+    error_msgs = list()
     for idx, courier in enumerate(couriers['data']):
         temp = Courier.query.get(courier['courier_id'])
         if not temp:
@@ -34,9 +33,10 @@ def post_courier():
             result_idxs.append({'id': idx + 1})
         else:
             errors_idxs.append({'id': idx + 1})
-
+            error_msgs.append({'id': idx + 1, 'messages': ['Courier with this id already exist']})
     if errors_idxs:
-        return jsonify({'validation_error': {'couriers': list(errors_idxs)}}), 400
+        return jsonify({'validation_error': {'couriers': errors_idxs,
+                                             'error_description': error_msgs}}), 400
 
     db.session.commit()
     response = jsonify({'couriers': result_idxs})
@@ -46,12 +46,14 @@ def post_courier():
 
 @app.route('/couriers/<courier_id>', methods=['GET'])
 def get_courier(courier_id):
-    courier = Courier.query.get_or_404(courier_id)
+    courier = Courier.query.get(courier_id)
+    if not courier:
+        return jsonify(), 404
 
     json_data = courier.to_dict()
     if courier.completed_orders:
         json_data['rating'] = courier.calculate_rating()
-        json_data['earnings'] = courier.calculate_earnings()
+    json_data['earnings'] = courier.calculate_earnings()
 
     response = jsonify(json_data)
     response.status_code = 200
@@ -65,11 +67,11 @@ def patch_courier(courier_id):
     validator = jsonschema.Draft7Validator(CourierItem)
     errors = validator.iter_errors(data)
     for error in errors:
-        abort(400)
+        return jsonify(), 400
 
     courier = Courier.query.get(courier_id)
     if not courier:
-        abort(400)
+        return jsonify(), 404
 
     courier.edit(data)
     orders_not_intersect = courier.check_time_not_intersection()
@@ -86,36 +88,34 @@ def patch_courier(courier_id):
 def post_order():
     orders = request.json
 
-    validator = jsonschema.Draft7Validator(OrdersPostRequest)
-    errors = validator.iter_errors(orders)
-    errors_idxs = list()
-    for error in errors:
-        error_elem = {'id': error.path[1] + 1}
-        if error_elem not in errors_idxs:
-            errors_idxs.append(error_elem)
-    if errors_idxs:
-        return jsonify({'validation_error': {'orders': list(errors_idxs)}})
+    validation_errors = check_courier_validation(orders, 'order')
+    if validation_errors:
+        return validation_errors
 
-    result_ids = []
-    for idx, order in enumerate(orders['data']):
-        temp = Order.query.get(order['order_id'])
+    errors_idxs = list()
+    result_idxs = list()
+    error_msgs = list()
+    for idx, courier in enumerate(orders['data']):
+        temp = Order.query.get(courier['order_id'])
         if not temp:
             new_order = Order()
-            new_order.from_dict(order)
+            new_order.from_dict(courier)
             db.session.add(new_order)
-            result_ids.append({'id': idx + 1})
+            result_idxs.append({'id': idx + 1})
         else:
             errors_idxs.append({'id': idx + 1})
-
+            error_msgs.append({'id': idx + 1, 'messages': ['Order with this id already exist']})
     if errors_idxs:
-        return jsonify({'validation_error': {'orders': list(errors_idxs)}})
+        return jsonify({'validation_error': {'orders': errors_idxs,
+                                             'error_description': error_msgs}}), 400
 
     db.session.commit()
-    response = jsonify({'orders': result_ids})
+    response = jsonify({'couriers': result_idxs})
     response.status_code = 201
     return response
 
 
+#  TODO протестировать
 @app.route('/orders/assign', methods=['POST'])
 def post_order_assign():
     data = request.json
@@ -123,13 +123,21 @@ def post_order_assign():
     validator = jsonschema.Draft7Validator(CourierId)
     errors = list(validator.iter_errors(data))
     if errors:
-        abort(400)
+        return jsonify(), 400
 
     courier = Courier.query.get(data['courier_id'])
     if not courier:
-        abort(400)
+        return jsonify(), 400
 
-    courier.balancer_orders()
+    new_orders = courier.balancer_orders()
+    old_orders = courier.orders
+    if not new_orders and old_orders:
+        orders_idx = []
+        for order in old_orders:
+            orders_idx.append({'id': order.order_id})
+        return jsonify({'orders': orders_idx,
+                        'assign_time': old_orders[0].assign_time.
+                       strftime('%Y-%m-%dT%-H:%M:%S.%f'[:-3] + 'Z')})
 
     orders_idx = []
     orders = Order.query.filter(
@@ -157,11 +165,11 @@ def post_complete_assign():
     validator = jsonschema.Draft7Validator(OrderComplete)
     errors = list(validator.iter_errors(data))
     if errors:
-        abort(400)
+        return jsonify(), 400
 
     order = Order.query.get(data['order_id'])
     if not order or order.courier_id != data['courier_id']:
-        abort(400)
+        return jsonify(), 400
 
     if not order.is_complete:
         order.is_complete = True

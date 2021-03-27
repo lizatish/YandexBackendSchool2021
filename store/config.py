@@ -5,6 +5,13 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config(object):
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
-    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:postgres@localhost:5432/yandex_store'
+    # SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:postgres@localhost:5432/yandex_store'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+
+class TestConfig(object):
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:postgres@localhost:5430/store'
     # SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     SQLALCHEMY_TRACK_MODIFICATIONS = False

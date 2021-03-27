@@ -4,9 +4,9 @@ OrdersPostRequest = {
     'properties': {
         'data': {
             'type': 'array',
-            'additionalProperties': False,
             'items': {
                 'type': 'object',
+                'additionalProperties': False,
                 'properties': {
                     'order_id': {
                         'type': 'integer',

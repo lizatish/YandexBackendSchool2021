@@ -19,10 +19,5 @@ CourierItem = {
                 "pattern": '^[0-9]{2}[:]{1}[0-9]{2}[-]{1}[0-9]{2}[:]{1}[0-9]{2}$',
             }
         }
-    },
-    "anyOf": [
-        {"required": ["courier_type"]},
-        {"required": ["regions"]},
-        {"required": ["working_hours"]}
-    ]
+    }
 }
