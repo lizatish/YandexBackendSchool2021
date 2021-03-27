@@ -1,10 +1,12 @@
 CouriersPostRequest = {
     'type': 'object',
+    'additionalProperties': False,
     'properties': {
         'data': {
             'type': 'array',
             'items': {
                 'type': 'object',
+                'additionalProperties': False,
                 'properties': {
                     'courier_id': {
                         'type': 'integer',
@@ -28,8 +30,8 @@ CouriersPostRequest = {
                         }
                     }},
                 'required': ['courier_id', 'courier_type', 'regions', 'working_hours']
-            }
+            },
         }
     },
-    'required': ['data']
+    'required': ['data'],
 }

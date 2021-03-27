@@ -1,5 +1,6 @@
 CourierId = {
     'type': 'object',
+    'additionalProperties': False,
     'properties': {
         'courier_id': {
             'type': 'integer',

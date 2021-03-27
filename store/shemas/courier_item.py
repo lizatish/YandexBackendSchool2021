@@ -1,5 +1,6 @@
 CourierItem = {
     'type': 'object',
+    'additionalProperties': False,
     'properties': {
         'courier_type': {
             'type': 'string',

@@ -1,8 +1,10 @@
 OrdersPostRequest = {
     'type': 'object',
+    'additionalProperties': False,
     'properties': {
         'data': {
             'type': 'array',
+            'additionalProperties': False,
             'items': {
                 'type': 'object',
                 'properties': {
