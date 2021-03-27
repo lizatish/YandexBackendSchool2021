@@ -12,44 +12,26 @@ from store.shemas.courier_item import CourierItem
 from store.shemas.courier_post_request import CouriersPostRequest
 from store.shemas.order_complete import OrderComplete
 from store.shemas.order_post_request import OrdersPostRequest
+from store.tools import check_courier_validation
 
 
 @app.route('/couriers', methods=['POST'])
 def post_courier():
     couriers = request.json
 
-    validator = jsonschema.Draft7Validator(CouriersPostRequest)
-    errors = validator.iter_errors(couriers)
+    validation_errors = check_courier_validation(couriers)
+    if validation_errors:
+        return validation_errors
+
     errors_idxs = list()
-    error_msgs = list()
-    for error in errors:
-        # if not error.path:
-        #     error_msgs.append(error.message)
-        #     error_elem = [{'id': elem['courier_id']} for elem in couriers['data']]
-        #     errors_idxs.append(error_elem)
-        #     break
-
-        courier_id = couriers['data'][error.path[1]]['courier_id']
-        error_elem = {'id': courier_id}
-
-        if error_elem not in errors_idxs:
-            errors_idxs.append(error_elem)
-            error_msgs.append({'id': courier_id, 'messages': [error.message]})
-        else:
-            error_msgs[-1]['messages'].append(error.message)
-
-    if errors_idxs or error_msgs:
-        return jsonify({'validation_error': {'couriers': list(errors_idxs)},
-                        'error_descriptions': error_msgs}), 400
-
-    result_ids = []
+    result_idxs = []
     for idx, courier in enumerate(couriers['data']):
         temp = Courier.query.get(courier['courier_id'])
         if not temp:
             new_courier = Courier()
             new_courier.from_dict(courier)
             db.session.add(new_courier)
-            result_ids.append({'id': idx + 1})
+            result_idxs.append({'id': idx + 1})
         else:
             errors_idxs.append({'id': idx + 1})
 
@@ -57,7 +39,7 @@ def post_courier():
         return jsonify({'validation_error': {'couriers': list(errors_idxs)}}), 400
 
     db.session.commit()
-    response = jsonify({'couriers': result_ids})
+    response = jsonify({'couriers': result_idxs})
     response.status_code = 201
     return response
 
