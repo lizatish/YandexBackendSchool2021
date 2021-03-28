@@ -81,7 +81,8 @@
     Сохранить изменения путем последователного нажатия клавиш Ctrl+O, Ctrl+X
 12. Зайти в директорию проекта и собрать docker-образ:
     ```bash 
-    cd .. sudo docker-compose build
+    cd .. 
+    sudo docker-compose build
     ```
 13. Запустить сервис:
     ```bash  
