@@ -5,7 +5,7 @@ from store.shemas.courier_post_request import CouriersPostRequest
 from store.shemas.order_post_request import OrdersPostRequest
 
 
-def check_courier_validation(couriers, type):
+def check_error_validation(couriers, type):
     if type == 'order':
         id_type = 'order_id'
         error_type = 'orders'
