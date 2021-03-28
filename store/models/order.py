@@ -8,7 +8,7 @@ class Order(db.Model):
     order_id = db.Column(db.Integer, primary_key=True, unique=True)
     courier_id = db.Column(db.Integer, db.ForeignKey('courier.courier_id'))
 
-    weight = db.Column(db.Float)
+    weight = db.Column(db.DECIMAL)
     region = db.Column(db.Integer)
 
     is_complete = db.Column(db.Boolean, default=False)

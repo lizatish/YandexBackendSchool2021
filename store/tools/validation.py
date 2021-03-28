@@ -25,12 +25,12 @@ def check_error_validation(couriers, type):
             errors_idxs.append(error_elem)
             break
 
-        courier_id = couriers['data'][error.path[1]][id_type]
-        error_elem = {'id': courier_id}
+        id = couriers['data'][error.path[1]][id_type]
+        error_elem = {'id': id}
 
         if error_elem not in errors_idxs:
             errors_idxs.append(error_elem)
-            error_msgs.append({'id': courier_id, 'messages': [error.message]})
+            error_msgs.append({'id': id, 'messages': [error.message]})
         else:
             error_msgs[-1]['messages'].append(error.message)
 

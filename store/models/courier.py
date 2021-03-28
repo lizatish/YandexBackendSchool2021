@@ -1,6 +1,8 @@
 from math import inf
 from typing import List
 
+import sqlalchemy
+
 from store import db
 from store.models.completed_order import CompletedOrders
 from store.models.courier_assign_time import CourierAssignTime
@@ -14,7 +16,7 @@ class Courier(db.Model):
     courier_type = db.Column(db.Enum(CourierType))
     regions = db.Column(db.ARRAY(db.Integer))
 
-    current_weight = db.Column(db.Integer, default=0)
+    current_weight = db.Column(db.DECIMAL, default=0.0)
     max_weight = db.Column(db.Integer)
 
     orders: List[Order] = db.relationship(Order, backref=db.backref('courier'))
@@ -64,8 +66,9 @@ class Courier(db.Model):
         orders = Order.query.filter(
             Order.courier_id == None,
             Order.is_complete == False,
+            Order.weight + self.current_weight <= self.max_weight,
             Order.region.in_(self.regions)
-        ).all()
+        ).order_by(Order.weight).all()
 
         new_orders = []
         for order in orders:
@@ -88,7 +91,7 @@ class Courier(db.Model):
 
                         order.courier_id = self.courier_id
                         new_orders.append(order)
-
+                        self.current_weight += order.weight
                         break
                     else:
                         break
