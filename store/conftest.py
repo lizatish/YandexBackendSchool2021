@@ -3,6 +3,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import NullPool
 
+from store.models import Base
+
 
 @pytest.fixture()
 def engine(postgresql):
