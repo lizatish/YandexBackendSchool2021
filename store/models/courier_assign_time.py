@@ -1,12 +1,17 @@
+from sqlalchemy import Integer, Column
+
 from store import db
+from store.models import Base
 
 
-class CourierAssignTime(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    time_start_hour = db.Column(db.Integer)
-    time_start_min = db.Column(db.Integer)
-    time_finish_hour = db.Column(db.Integer)
-    time_finish_min = db.Column(db.Integer)
+class CourierAssignTime(Base):
+    __tablename__ = 'courier_assign_time'
+
+    id = db.Column(Integer, primary_key=True)
+    time_start_hour = Column(Integer)
+    time_start_min = Column(Integer)
+    time_finish_hour = Column(Integer)
+    time_finish_min = Column(Integer)
 
     courier_id = db.Column(db.Integer, db.ForeignKey('courier.courier_id'))
 

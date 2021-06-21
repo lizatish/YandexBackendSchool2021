@@ -1,21 +1,27 @@
 from typing import List
 
+from sqlalchemy import Column, Integer, DECIMAL, ForeignKey, DateTime, Boolean
+from sqlalchemy.orm import relationship, backref
+
 from store import db
+from store.models import Base
 from store.models.order_assign_time import OrderAssignTime
 
 
-class Order(db.Model):
-    order_id = db.Column(db.Integer, primary_key=True, unique=True)
-    courier_id = db.Column(db.Integer, db.ForeignKey('courier.courier_id'))
+class Order(Base):
+    __tablename__ = 'order'
 
-    weight = db.Column(db.DECIMAL)
-    region = db.Column(db.Integer)
+    order_id = Column(Integer, primary_key=True, unique=True)
+    courier_id = Column(Integer, ForeignKey('courier.courier_id'))
 
-    is_complete = db.Column(db.Boolean, default=False)
-    complete_time = db.Column(db.DateTime)
-    assign_time = db.Column(db.DateTime)
+    weight = Column(DECIMAL)
+    region = Column(Integer)
 
-    assign_times: List[OrderAssignTime] = db.relationship(OrderAssignTime, backref=db.backref('order'))
+    is_complete = Column(Boolean, default=False)
+    complete_time = Column(DateTime)
+    assign_time = Column(DateTime)
+
+    assign_times: List[OrderAssignTime] = relationship(OrderAssignTime, backref=backref('order'))
 
     def from_dict(self, data):
         for field in ['order_id', 'weight', 'region', 'delivery_hours']:
