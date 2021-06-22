@@ -1,8 +1,7 @@
 from store import db
-from store.models import Base
 
 
-class CompletedOrders(Base):
+class CompletedOrders(db.Model):
     __tablename__ = 'completed_orders'
 
     id = db.Column(db.Integer, primary_key=True)

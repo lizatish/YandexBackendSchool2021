@@ -1,11 +1,8 @@
 from math import inf
 from typing import List
 
-from sqlalchemy import Column, DECIMAL, Integer, Enum, ARRAY
-from sqlalchemy.orm import relationship
 
 from store import db
-from store.models import Base
 from store.models.completed_order import CompletedOrders
 from store.models.courier_assign_time import CourierAssignTime
 from store.models.courier_type import CourierType
@@ -13,19 +10,19 @@ from store.models.order import Order
 from store.models.order_assign_time import OrderAssignTime
 
 
-class Courier(Base):
+class Courier(db.Model):
     __tablename__ = 'courier'
 
-    courier_id = Column(Integer, primary_key=True, unique=True)
-    courier_type = Column(Enum(CourierType))
-    regions = Column(ARRAY(Integer))
+    courier_id = db.Column(db.Integer, primary_key=True, unique=True)
+    courier_type = db.Column(db.Enum(CourierType))
+    regions = db.Column(db.ARRAY(db.Integer))
 
-    current_weight = Column(DECIMAL, default=0.0)
-    max_weight = Column(Integer)
+    current_weight = db.Column(db.DECIMAL, default=0.0)
+    max_weight = db.Column(db.Integer)
 
-    orders: List[Order] = relationship(Order, backref=db.backref('courier'))
-    completed_orders: List[CompletedOrders] = relationship(CompletedOrders, backref=db.backref('courier'))
-    assign_times: List[CourierAssignTime] = relationship(CourierAssignTime, backref=db.backref('courier'))
+    orders: List[Order] = db.relationship(Order, backref=db.backref('courier'))
+    completed_orders: List[CompletedOrders] = db.relationship(CompletedOrders, backref=db.backref('courier'))
+    assign_times: List[CourierAssignTime] = db.relationship(CourierAssignTime, backref=db.backref('courier'))
 
     def from_dict(self, data):
         for field in ['courier_id', 'courier_type', 'regions', 'working_hours']:

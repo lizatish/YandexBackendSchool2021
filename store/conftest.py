@@ -3,6 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import NullPool
 
+from store import db
 from store.models import Base
 
 
@@ -14,9 +15,9 @@ def engine(postgresql):
 
 @pytest.fixture()
 def tables(engine):
-    Base.metadata.create_all(engine)
+    db.Model.metadata.create_all(engine)
     yield
-    Base.metadata.drop_all(engine)
+    db.Model.metadata.drop_all(engine)
 
 
 @pytest.fixture

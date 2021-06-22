@@ -1,20 +1,16 @@
-from sqlalchemy import Integer, Column, ForeignKey
-
 from store import db
-from store.models import Base
 
 
-class OrderAssignTime(Base):
+class OrderAssignTime(db.Model):
     __tablename__ = 'order_assign_time'
 
-    id = db.Column(Integer, primary_key=True)
-    order_id = Column(Integer, ForeignKey('order.order_id'))
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('order.order_id'))
 
-    time_start_hour = Column(Integer)
-    time_start_min = Column(Integer)
-    time_finish_hour = Column(Integer)
-    time_finish_min = Column(Integer)
-
+    time_start_hour = db.Column(db.Integer)
+    time_start_min = db.Column(db.Integer)
+    time_finish_hour = db.Column(db.Integer)
+    time_finish_min = db.Column(db.Integer)
 
     def __init__(self, delivery_hours, order_id):
         data = delivery_hours.split('-')
