@@ -4,7 +4,6 @@ from sqlalchemy.orm import Session
 from sqlalchemy.pool import NullPool
 
 from store import db
-from store.models import Base
 
 
 @pytest.fixture()

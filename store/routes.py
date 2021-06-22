@@ -145,7 +145,7 @@ def post_order_assign():
 def post_complete_assign():
     data = request.json
 
-    validator = jsonschema.Draft7Validator(OrderComplete)
+    validator = jsonschema.Draft7Validator(OrderComplete, format_checker=jsonschema.FormatChecker())
     errors = list(validator.iter_errors(data))
     if errors:
         return jsonify(), 400

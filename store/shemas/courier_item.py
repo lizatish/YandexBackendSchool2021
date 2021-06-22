@@ -15,8 +15,10 @@ CourierItem = {
             'type': 'array',
             "minItems": 1,
             'items': {
-                'type': 'string',
-                "pattern": '^[0-9]{2}[:]{1}[0-9]{2}[-]{1}[0-9]{2}[:]{1}[0-9]{2}$',
+                # 'type': 'string',
+                "type": "orderdatetime"
+
+                # "pattern": '^[0-9]{2}[:]{1}[0-9]{2}[-]{1}[0-9]{2}[:]{1}[0-9]{2}$',
             }
         }
     }
