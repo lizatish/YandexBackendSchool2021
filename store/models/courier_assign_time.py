@@ -10,7 +10,7 @@ class CourierAssignTime(db.Model):
     time_finish_hour = db.Column(db.Integer)
     time_finish_min = db.Column(db.Integer)
 
-    courier_id = db.Column(db.Integer, db.ForeignKey('courier.courier_id'))
+    courier_id = db.Column(db.Integer, db.ForeignKey('courier.id'))
 
     def __init__(self, delivery_hours, courier_id):
         data = delivery_hours.split('-')

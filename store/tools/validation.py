@@ -26,17 +26,26 @@ def validate_data_with_time_interval(schema, instance):
     return validator(schema=schema).iter_errors(instance)
 
 
-def create_error_message(data, errors, id_type, data_type):
+def create_error_message(data_type, data, errors):
     errors_idxs = list()
     error_msgs = list()
     for error in errors:
         if not error.path:
             error_msgs.append(error.message)
-            error_elem = [{'id': elem[id_type]} for elem in data['data']]
+            error_elem = [{'id': elem['id']} for elem in data['data']]
             errors_idxs.append(error_elem)
             break
 
-        id = data['data'][error.path[1]][id_type]
+        if error.validator != 'required':
+            continue
+
+        error_data_elem = data['data'][error.path[1]]
+        if data_type == 'couriers' and 'courier_id' in error_data_elem:
+            id = error_data_elem['courier_id']
+        elif data_type == 'orders' and 'order_id' in error_data_elem:
+            id = error_data_elem['order_id']
+        else:
+            id = error.path[1] + 1
         error_elem = {'id': id}
 
         if error_elem not in errors_idxs:
@@ -54,10 +63,10 @@ def create_error_message(data, errors, id_type, data_type):
 def check_courier_validation(data):
     errors = validate_data_with_time_interval(CouriersPostRequest, data)
     if errors:
-        return create_error_message(data, errors, 'courier_id', 'couriers')
+        return create_error_message('couriers', data, errors)
 
 
 def check_order_validation(data):
     errors = validate_data_with_time_interval(OrdersPostRequest, data)
     if errors:
-        return create_error_message(data, errors, 'order_id', 'orders')
+        return create_error_message('orders', data, errors)

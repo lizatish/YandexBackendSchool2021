@@ -13,7 +13,7 @@ from store.models.order_assign_time import OrderAssignTime
 class Courier(db.Model):
     __tablename__ = 'courier'
 
-    courier_id = db.Column(db.Integer, primary_key=True, unique=True)
+    id = db.Column(db.Integer, primary_key=True, unique=True)
     courier_type = db.Column(db.Enum(CourierType))
     regions = db.Column(db.ARRAY(db.Integer))
 
@@ -34,6 +34,8 @@ class Courier(db.Model):
                     for working_hour in data[field]:
                         assign_time = CourierAssignTime(working_hour, data['courier_id'])
                         db.session.add(assign_time)
+                elif field == 'courier_id':
+                    setattr(self, 'id', data[field])
                 else:
                     setattr(self, field, data[field])
 
@@ -53,7 +55,7 @@ class Courier(db.Model):
 
     def to_dict(self):
         data = {
-            'courier_id': self.courier_id,
+            'id': self.id,
             'courier_type': self.courier_type.value,
             'regions': self.regions,
             'working_hours': self.get_working_hours(),

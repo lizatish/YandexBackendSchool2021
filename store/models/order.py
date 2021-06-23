@@ -7,8 +7,8 @@ from store.models.order_assign_time import OrderAssignTime
 class Order(db.Model):
     __tablename__ = 'order'
 
-    order_id = db.Column(db.Integer, primary_key=True, unique=True)
-    courier_id = db.Column(db.Integer, db.ForeignKey('courier.courier_id'))
+    id = db.Column(db.Integer, primary_key=True, unique=True)
+    courier_id = db.Column(db.Integer, db.ForeignKey('courier.id'))
 
     weight = db.Column(db.DECIMAL)
     region = db.Column(db.Integer)
@@ -26,12 +26,14 @@ class Order(db.Model):
                     for working_hour in data[field]:
                         assign_time = OrderAssignTime(working_hour, data['order_id'])
                         db.session.add(assign_time)
+                elif field == 'order_id':
+                    setattr(self, 'id', data[field])
                 else:
                     setattr(self, field, data[field])
 
     def to_dict(self):
         data = {
-            'order_id': self.order_id,
+            'id': self.id,
             'weight': self.weight,
             'region': self.region,
             'working_hours': self.get_working_hours()

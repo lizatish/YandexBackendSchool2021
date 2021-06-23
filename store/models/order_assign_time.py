@@ -5,7 +5,7 @@ class OrderAssignTime(db.Model):
     __tablename__ = 'order_assign_time'
 
     id = db.Column(db.Integer, primary_key=True)
-    order_id = db.Column(db.Integer, db.ForeignKey('order.order_id'))
+    order_id = db.Column(db.Integer, db.ForeignKey('order.id'))
 
     time_start_hour = db.Column(db.Integer)
     time_start_min = db.Column(db.Integer)

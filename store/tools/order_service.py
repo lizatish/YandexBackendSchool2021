@@ -6,18 +6,17 @@ from store.tools.time_service import TimeService
 
 
 class OrderService:
-
     @staticmethod
     def add_orders(orders):
         success, errors = list(), list()
-        for idx, orderr in enumerate(orders):
+        for idx, order in enumerate(orders):
 
-            order_id = orderr['order_id']
+            order_id = order['order_id']
             temp_courier = Order.query.get(order_id)
 
             if not temp_courier:
                 new_order = Order()
-                new_order.from_dict(orderr)
+                new_order.from_dict(order)
                 db.session.add(new_order)
                 success.append(order_id)
             else:
