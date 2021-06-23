@@ -8,16 +8,16 @@ from store.shemas.order_complete import OrderComplete
 from store.tools.courier_service import CourierService
 from store.tools.order_service import OrderService
 from store.tools.time_service import TimeService
-from store.tools.validation import check_error_validation
+from store.tools.validation import check_courier_validation, check_order_validation
 
 
 @app.route('/couriers', methods=['POST'])
 def post_courier():
     couriers = request.json
 
-    validation_errors = check_error_validation(couriers, 'courier')
-    if validation_errors:
-        return validation_errors
+    errors = check_courier_validation(couriers)
+    if errors:
+        return errors
 
     success, errors = CourierService.add_couriers(couriers['data'])
     if errors:
@@ -80,9 +80,9 @@ def patch_courier(courier_id):
 def post_order():
     orders = request.json
 
-    validation_errors = check_error_validation(orders, 'order')
-    if validation_errors:
-        return validation_errors
+    errors = check_order_validation(orders)
+    if errors:
+        return errors
 
     success, errors = OrderService.add_orders(orders['data'])
     if errors:

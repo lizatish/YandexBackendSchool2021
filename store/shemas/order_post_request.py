@@ -25,8 +25,7 @@ OrdersPostRequest = {
                         'type': 'array',
                         "minItems": 1,
                         'items': {
-                            'type': 'string',
-                            "pattern": '^[0-2]{1}[0-9]{1}[:][0-5]{1}[0-9]{1}[-][0-2]{1}[0-9]{1}[:][0-5]{1}[0-9]{1}$',
+                            'type': 'interval_time'
                         }
                     }},
                 'required': ['order_id', 'weight', 'region', 'delivery_hours']
