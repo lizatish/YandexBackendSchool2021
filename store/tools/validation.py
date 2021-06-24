@@ -30,14 +30,9 @@ def create_error_message(data_type, data, errors):
     errors_idxs = list()
     error_msgs = list()
     for error in errors:
-        if not error.path:
+        if len(error.path) < 2:
             error_msgs.append(error.message)
-            error_elem = [{'id': elem['id']} for elem in data['data']]
-            errors_idxs.append(error_elem)
             break
-
-        if error.validator != 'required':
-            continue
 
         error_data_elem = data['data'][error.path[1]]
         if data_type == 'couriers' and 'courier_id' in error_data_elem:
@@ -46,10 +41,10 @@ def create_error_message(data_type, data, errors):
             id = error_data_elem['order_id']
         else:
             id = error.path[1] + 1
-        error_elem = {'id': id}
+        error_id = {'id': id}
 
-        if error_elem not in errors_idxs:
-            errors_idxs.append(error_elem)
+        if error_id not in errors_idxs:
+            errors_idxs.append(error_id)
             error_msgs.append({'id': id, 'messages': [error.message]})
         else:
             error_msgs[-1]['messages'].append(error.message)

@@ -4,6 +4,8 @@ OrdersPostRequest = {
     'properties': {
         'data': {
             'type': 'array',
+            'additionalItems': False,
+            'minItems': 1,
             'items': {
                 'type': 'object',
                 'additionalProperties': False,
