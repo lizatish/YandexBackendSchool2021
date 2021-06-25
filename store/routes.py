@@ -6,6 +6,7 @@ from store.shemas.courier_id import CourierId
 from store.shemas.courier_item import CourierItem
 from store.shemas.order_complete import OrderComplete
 from store.tools.courier_service import CourierService
+from store.tools.json_service import JsonService
 from store.tools.order_service import OrderService
 from store.tools.time_service import TimeService
 from store.tools.validation import check_courier_validation, check_order_validation
@@ -13,29 +14,19 @@ from store.tools.validation import check_courier_validation, check_order_validat
 
 @app.route('/couriers', methods=['POST'])
 def post_courier():
+    json_service = JsonService()
+
     couriers = request.json
 
     errors = check_courier_validation(couriers)
     if errors:
-        return errors
+        return json_service.return_validation_error_answer_400('couriers', couriers, errors)
 
     success, errors = CourierService.add_couriers(couriers['data'])
     if errors:
-        errors_idxs = list()
-        error_msgs = list()
-        for error_id in errors:
-            errors_idxs.append({'id': error_id})
-            error_msgs.append({'id': error_id, 'messages': ['Courier with this id already exist']})
-        if errors_idxs:
-            return jsonify({'validation_error': {'couriers': errors_idxs,
-                                                 'error_description': error_msgs}}), 400
+        return json_service.return_courier_logic_error_answer_400(errors)
 
-    success_idxs = list()
-    for success_id in success:
-        success_idxs.append({'id': success_id})
-    response = jsonify({'couriers': success_idxs})
-    response.status_code = 201
-    return response
+    return json_service.return_courier_answer_201(success)
 
 
 @app.route('/couriers/<courier_id>', methods=['GET'])
