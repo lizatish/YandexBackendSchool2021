@@ -26,87 +26,78 @@ def post_courier():
     if errors:
         return json_service.return_courier_logic_error_answer_400(errors)
 
-    return json_service.return_courier_answer_201(success)
+    return json_service.return_answer_201('couriers', success)
 
 
 @app.route('/couriers/<courier_id>', methods=['GET'])
 def get_courier(courier_id):
+    json_service = JsonService()
+
     courier = CourierService.get_courier(courier_id)
     if not courier:
-        return jsonify(), 404
+        return json_service.return_404()
 
     json_data = courier.to_dict()
     if courier.completed_orders:
         json_data['rating'] = courier.calculate_rating()
     json_data['earnings'] = courier.calculate_earnings()
 
-    response = jsonify(json_data)
-    response.status_code = 200
-    return response
+    return json_service.return_200(json_data)
 
 
 @app.route('/couriers/<courier_id>', methods=['PATCH'])
 def patch_courier(courier_id):
+    json_service = JsonService()
+
     data = request.json
 
     validator = jsonschema.Draft7Validator(CourierItem)
     errors = validator.iter_errors(data)
-    for error in errors:
-        return jsonify(), 400
+    if errors:
+        return json_service.return_400()
 
     courier = CourierService.get_courier(courier_id)
     if not courier:
-        return jsonify(), 404
+        return json_service.return_404()
 
     CourierService.edit_courier(courier, data)
     intersection_orders = CourierService.get_intersection_orders(courier)
     OrderService.release_orders(intersection_orders)
 
-    response = jsonify(courier.to_dict())
-    response.status_code = 200
-    return response
+    return json_service.return_200(courier.to_dict())
 
 
 @app.route('/orders', methods=['POST'])
 def post_order():
+    json_service = JsonService()
+
     orders = request.json
 
     errors = check_order_validation(orders)
     if errors:
-        return errors
+        return json_service.return_validation_error_answer_400('orders', orders, errors)
 
     success, errors = OrderService.add_orders(orders['data'])
     if errors:
-        errors_idxs = list()
-        error_msgs = list()
-        for error_id in errors:
-            errors_idxs.append({'id': error_id})
-            error_msgs.append({'id': error_id, 'messages': ['Order with this id already exist']})
-        if errors_idxs:
-            return jsonify({'validation_error': {'orders': errors_idxs,
-                                                 'error_description': error_msgs}}), 400
+        return json_service.return_order_logic_error_answer_400(errors)
 
-    success_idxs = list()
-    for success_id in success:
-        success_idxs.append({'id': success_id})
-    response = jsonify({'orders': success_idxs})
-    response.status_code = 201
-    return response
+    return json_service.return_answer_201('orders', success)
 
 
-#  TODO протестировать
 @app.route('/orders/assign', methods=['POST'])
 def post_order_assign():
+    json_service = JsonService()
+
     data = request.json
 
     validator = jsonschema.Draft7Validator(CourierId)
     errors = list(validator.iter_errors(data))
     if errors:
-        return jsonify(), 400
+        return json_service.return_400()
 
     courier = CourierService.get_courier(data['courier_id'])
     if not courier:
-        return jsonify(), 400
+        return json_service.return_400()
 
     new_orders, old_orders = CourierService.get_assign_orders(courier)
 
@@ -134,18 +125,20 @@ def post_order_assign():
 
 @app.route('/orders/complete', methods=['POST'])
 def post_complete_assign():
+    json_service = JsonService()
+
     data = request.json
 
     validator = jsonschema.Draft7Validator(OrderComplete, format_checker=jsonschema.FormatChecker())
     errors = list(validator.iter_errors(data))
     if errors:
-        return jsonify(), 400
+        return json_service.return_400()
 
     order = OrderService.get_order(data['order_id'])
     if not order or order.courier_id != data['courier_id']:
-        return jsonify(), 400
+        return json_service.return_400()
 
     if not order.is_complete:
         OrderService.complete_order(order, data['complete_time'])
 
-    return jsonify({'order_id': order.order_id}), 200
+    return json_service.return_200({'order_id': order.order_id})

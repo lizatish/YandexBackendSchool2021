@@ -30,8 +30,6 @@ def check_courier_validation(data):
     return errors
 
 
-
 def check_order_validation(data):
     errors = validate_data_with_time_interval(OrdersPostRequest, data)
-    if errors:
-        return create_error_message('orders', data, errors)
+    return errors

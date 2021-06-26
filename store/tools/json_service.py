@@ -6,11 +6,20 @@ class JsonService:
         return jsonify({'validation_error': {data_type: errors_idxs,
                                              'error_description': error_msgs}}), 400
 
-    def return_courier_answer_201(self, success):
+    def return_400(self):
+        return jsonify(), 400
+
+    def return_404(self):
+        return jsonify(), 404
+
+    def return_200(self, data):
+        return jsonify(data), 200
+
+    def return_answer_201(self, data_type, data):
         success_idxs = list()
-        for success_id in success:
+        for success_id in data:
             success_idxs.append({'id': success_id})
-        response = jsonify({'couriers': success_idxs})
+        response = jsonify({data_type: success_idxs})
         response.status_code = 201
         return response
 
@@ -22,6 +31,15 @@ class JsonService:
             error_msgs.append({'id': error_id, 'messages': ['Courier with this id already exist']})
 
         return self.__form_400('couriers', errors_idxs, error_msgs)
+
+    def return_order_logic_error_answer_400(self, errors):
+        errors_idxs = list()
+        error_msgs = list()
+        for error_id in errors:
+            errors_idxs.append({'id': error_id})
+            error_msgs.append({'id': error_id, 'messages': ['Order with this id already exist']})
+
+        return self.__form_400('orders', errors_idxs, error_msgs)
 
     def return_validation_error_answer_400(self, data_type, data, errors):
         errors_idxs = list()
@@ -47,6 +65,3 @@ class JsonService:
                 error_msgs[-1]['messages'].append(error.message)
 
         return self.__form_400(data_type, errors_idxs, error_msgs)
-
-    def answer_200(self):
-        pass
