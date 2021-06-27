@@ -1,13 +1,11 @@
 import jsonschema
-from flask import jsonify, request
+from flask import request
 
 from store import app
-from store.shemas.courier_id import CourierId
 from store.shemas.order_complete import OrderComplete
 from store.tools.courier_service import CourierService
 from store.tools.json_service import JsonService
 from store.tools.order_service import OrderService
-from store.tools.time_service import TimeService
 from store.tools.validation import Validator
 
 
@@ -82,8 +80,7 @@ def post_order_assign():
 
     data = request.json
 
-    validator = jsonschema.Draft7Validator(CourierId)
-    errors = list(validator.iter_errors(data))
+    errors = Validator().check_post_order_assign_validation(data)
     if errors:
         return json_service.return_400()
 
@@ -92,27 +89,11 @@ def post_order_assign():
         return json_service.return_400()
 
     new_orders, old_orders = CourierService.get_assign_orders(courier)
-
     if not new_orders and old_orders:
-        orders_idx = []
-        for order in old_orders:
-            orders_idx.append({'id': order.id})
-        return jsonify({'orders': orders_idx,
-                        'assign_time':
-                            TimeService.get_assign_time_from_datetime(old_orders[0].assign_time)
-                        })
+        return json_service.return_order_assign_200(old_orders)
 
-    orders_idx = []
     orders = OrderService.refresh_assign_time(courier)
-    for order in orders:
-        orders_idx.append({'id': order.id})
-
-    if orders_idx:
-        return jsonify({
-            'orders': orders_idx,
-            'assign_time': TimeService.get_assign_time_from_datetime(orders[0].assign_time)
-        })
-    return jsonify({'orders': orders_idx})
+    return json_service.return_order_assign_200(orders)
 
 
 @app.route('/orders/complete', methods=['POST'])

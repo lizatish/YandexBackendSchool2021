@@ -1,5 +1,7 @@
 from flask import jsonify
 
+from store.tools.time_service import TimeService
+
 
 class JsonService:
     def __form_400(self, data_type, errors_data):
@@ -66,3 +68,19 @@ class JsonService:
                 error_msgs[-1]['messages'].append(error.message)
 
         return self.__form_400(data_type, (errors_idxs, error_msgs))
+
+    def return_order_assign_200(self, data):
+        if not data:
+            return jsonify({'orders': []}), 200
+
+        orders_idx = []
+        for order in data:
+            orders_idx.append({'id': order.id})
+
+        response = jsonify({'orders': orders_idx,
+                            'assign_time':
+                                TimeService.get_assign_time_from_datetime(data[0].assign_time)
+                            })
+
+        response.status_code = 200
+        return response
