@@ -40,6 +40,5 @@ class CourierService:
 
     @staticmethod
     def get_assign_orders(courier):
-        new_orders = courier.balancer_orders()
-        old_orders = [order for order in courier.orders if not order.is_complete]
-        return new_orders, old_orders
+        orders = courier.balancer_orders()
+        return orders

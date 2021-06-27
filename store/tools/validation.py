@@ -5,6 +5,7 @@ import jsonschema
 from store.shemas.courier_id import CourierId
 from store.shemas.courier_item import CourierItem
 from store.shemas.courier_post_request import CouriersPostRequest
+from store.shemas.order_complete import OrderComplete
 from store.shemas.order_post_request import OrdersPostRequest
 
 
@@ -25,10 +26,16 @@ class Validator:
         errors = self.__create_base_validator(data, CourierId)
         return errors
 
+    def check_post_orders_complete(self, data):
+        validator = jsonschema.Draft7Validator(OrderComplete, format_checker=jsonschema.FormatChecker())
+        errors = list(validator.iter_errors(data))
+        return errors
+
     # TODO может быть объединить в одну функцию две следующие
     def __create_base_validator(self, data, schema):
         validator = jsonschema.Draft7Validator(schema)
-        return list(validator.iter_errors(data))
+        errors = list(validator.iter_errors(data))
+        return errors
 
     def __validate_data_with_time_interval(self, schema, instance):
         base_validator = jsonschema.Draft7Validator

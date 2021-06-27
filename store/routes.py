@@ -1,8 +1,6 @@
-import jsonschema
 from flask import request
 
 from store import app
-from store.shemas.order_complete import OrderComplete
 from store.tools.courier_service import CourierService
 from store.tools.json_service import JsonService
 from store.tools.order_service import OrderService
@@ -88,11 +86,7 @@ def post_order_assign():
     if not courier:
         return json_service.return_400()
 
-    new_orders, old_orders = CourierService.get_assign_orders(courier)
-    if not new_orders and old_orders:
-        return json_service.return_order_assign_200(old_orders)
-
-    orders = OrderService.refresh_assign_time(courier)
+    orders = CourierService.get_assign_orders(courier)
     return json_service.return_order_assign_200(orders)
 
 
@@ -102,8 +96,7 @@ def post_complete_assign():
 
     data = request.json
 
-    validator = jsonschema.Draft7Validator(OrderComplete, format_checker=jsonschema.FormatChecker())
-    errors = list(validator.iter_errors(data))
+    errors = Validator().check_post_orders_complete(data)
     if errors:
         return json_service.return_400()
 
