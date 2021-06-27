@@ -1,6 +1,7 @@
 from store import db
 from store.models.courier import Courier
 from store.tools.order_service import OrderService
+from store.tools.time_service import TimeService
 
 
 class CourierService:
@@ -41,4 +42,7 @@ class CourierService:
     @staticmethod
     def get_assign_orders(courier):
         orders = courier.balancer_orders()
+        for order in orders:
+            order.assign_time = TimeService.get_assign_time()
+        db.session.commit()
         return orders

@@ -13,7 +13,7 @@ def post_courier():
 
     couriers = request.json
 
-    errors = Validator().check_post_courier_validation(couriers)
+    errors = Validator().check_post_couriers_validation(couriers)
     if errors:
         return json_service.return_validation_error_answer_400('couriers', couriers, errors)
 
@@ -61,7 +61,7 @@ def post_order():
 
     orders = request.json
 
-    errors = Validator().check_post_order_validation(orders)
+    errors = Validator().check_post_orders_validation(orders)
     if errors:
         return json_service.return_validation_error_answer_400('orders', orders, errors)
 
@@ -78,7 +78,7 @@ def post_order_assign():
 
     data = request.json
 
-    errors = Validator().check_post_order_assign_validation(data)
+    errors = Validator().check_post_orders_assign_validation(data)
     if errors:
         return json_service.return_400()
 

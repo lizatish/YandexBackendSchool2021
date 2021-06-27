@@ -10,35 +10,30 @@ from store.shemas.order_post_request import OrdersPostRequest
 
 
 class Validator:
-    def check_post_courier_validation(self, data):
-        errors = self.__validate_data_with_time_interval(CouriersPostRequest, data)
+    def __init__(self):
+        self.validator = jsonschema.Draft7Validator
+
+    def check_post_couriers_validation(self, data):
+        errors = self.__create_base_validator(data, CouriersPostRequest, interval_time_checker=True)
         return errors
 
-    def check_post_order_validation(self, data):
-        errors = self.__validate_data_with_time_interval(OrdersPostRequest, data)
+    def check_post_orders_validation(self, data):
+        errors = self.__create_base_validator(data, OrdersPostRequest, interval_time_checker=True)
         return errors
 
     def check_get_courier_validation(self, data):
-        errors = self.__validate_data_with_time_interval(CourierItem, data)
+        errors = self.__create_base_validator(data, CourierItem, interval_time_checker=True)
         return errors
 
-    def check_post_order_assign_validation(self, data):
+    def check_post_orders_assign_validation(self, data):
         errors = self.__create_base_validator(data, CourierId)
         return errors
 
     def check_post_orders_complete(self, data):
-        validator = jsonschema.Draft7Validator(OrderComplete, format_checker=jsonschema.FormatChecker())
-        errors = list(validator.iter_errors(data))
+        errors = self.__create_base_validator(data, OrderComplete, format_checker=jsonschema.FormatChecker())
         return errors
 
-    # TODO может быть объединить в одну функцию две следующие
-    def __create_base_validator(self, data, schema):
-        validator = jsonschema.Draft7Validator(schema)
-        errors = list(validator.iter_errors(data))
-        return errors
-
-    def __validate_data_with_time_interval(self, schema, instance):
-        base_validator = jsonschema.Draft7Validator
+    def __create_base_validator(self, data, schema, format_checker=None, interval_time_checker=False):
 
         def is_time_interval(checker, inst):
             try:
@@ -51,6 +46,9 @@ class Validator:
             except ValueError:
                 return False
 
-        interval_time_check = base_validator.TYPE_CHECKER.redefine(u'interval_time', is_time_interval)
-        validator = jsonschema.validators.extend(jsonschema.Draft7Validator, type_checker=interval_time_check)
-        return list(validator(schema=schema).iter_errors(instance))
+        interval_time_check = None
+        if interval_time_checker:
+            interval_time_check = self.validator.TYPE_CHECKER.redefine(u'interval_time', is_time_interval)
+
+        validator = jsonschema.validators.extend(self.validator, type_checker=interval_time_check)
+        return list(validator(schema=schema, format_checker=format_checker).iter_errors(data))

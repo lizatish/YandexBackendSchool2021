@@ -38,8 +38,14 @@ class Courier(db.Model):
                 else:
                     setattr(self, field, data[field])
 
+    # TODO может быть сделать через сериализатор?
     def to_dict(self):
-        json_data = self.super.to_dict()
+        json_data = {
+            'id': self.id,
+            'courier_type': self.courier_type.value,
+            'regions': self.regions,
+            'working_hours': self.get_working_hours(),
+        }
         if self.completed_orders:
             json_data['rating'] = self.calculate_rating()
         json_data['earnings'] = self.calculate_earnings()
@@ -51,22 +57,15 @@ class Courier(db.Model):
                 self.courier_type = CourierType.get_type(data[field])
                 self.max_weight = CourierType.get_max_weight(self.courier_type)
             elif field == 'working_hours':
+                for old_assign_time in self.assign_times:
+                    db.session.delete(old_assign_time)
+
                 for working_hour in data[field]:
-                    for old_assign_time in self.assign_times:
-                        db.session.delete(old_assign_time)
-                    assign_time = CourierAssignTime(working_hour, self.courier_id)
+                    assign_time = CourierAssignTime(working_hour, self.id)
                     db.session.add(assign_time)
+
             else:
                 setattr(self, field, data[field])
-
-    def to_dict(self):
-        data = {
-            'id': self.id,
-            'courier_type': self.courier_type.value,
-            'regions': self.regions,
-            'working_hours': self.get_working_hours(),
-        }
-        return data
 
     def get_working_hours(self):
         return [str(assign_time) for assign_time in self.assign_times]
@@ -125,7 +124,7 @@ class Courier(db.Model):
                        OrderAssignTime.time_finish_hour, OrderAssignTime.time_finish_min).all()
 
             courier_assign_times = CourierAssignTime.query.filter_by(
-                courier_id=self.courier_id).all()
+                courier_id=self.id).all()
 
             for courier_time in courier_assign_times:
                 for order_time in order_assign_times:
