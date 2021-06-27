@@ -1,5 +1,6 @@
 from store import db
 from store.models.courier import Courier
+from store.tools.order_service import OrderService
 
 
 class CourierService:
@@ -30,6 +31,8 @@ class CourierService:
     @staticmethod
     def edit_courier(courier, data):
         courier.edit(data)
+        intersection_orders = CourierService.get_intersection_orders(courier)
+        OrderService.release_orders(intersection_orders)
 
     @staticmethod
     def get_intersection_orders(courier):

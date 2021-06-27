@@ -1,7 +1,6 @@
 from store import db
 from store.models.completed_order import CompletedOrders
 from store.models.order import Order
-from store.tools.courier_service import CourierService
 from store.tools.time_service import TimeService
 
 
@@ -40,7 +39,7 @@ class OrderService:
     @staticmethod
     def refresh_assign_time(courier):
         orders = Order.query.filter(
-            Order.courier_id == courier.courier_id,
+            Order.courier_id == courier.id,
             Order.is_complete == False
         ).all()
 
@@ -55,6 +54,8 @@ class OrderService:
 
     @staticmethod
     def complete_order(order, complete_time):
+        from store.tools.courier_service import CourierService
+
         order.is_complete = True
         order.complete_time = complete_time
         courier = CourierService.get_courier(order.courier_id)

@@ -3,13 +3,12 @@ from flask import jsonify, request
 
 from store import app
 from store.shemas.courier_id import CourierId
-from store.shemas.courier_item import CourierItem
 from store.shemas.order_complete import OrderComplete
 from store.tools.courier_service import CourierService
 from store.tools.json_service import JsonService
 from store.tools.order_service import OrderService
 from store.tools.time_service import TimeService
-from store.tools.validation import check_courier_validation, check_order_validation
+from store.tools.validation import Validator
 
 
 @app.route('/couriers', methods=['POST'])
@@ -18,7 +17,7 @@ def post_courier():
 
     couriers = request.json
 
-    errors = check_courier_validation(couriers)
+    errors = Validator().check_post_courier_validation(couriers)
     if errors:
         return json_service.return_validation_error_answer_400('couriers', couriers, errors)
 
@@ -38,10 +37,6 @@ def get_courier(courier_id):
         return json_service.return_404()
 
     json_data = courier.to_dict()
-    if courier.completed_orders:
-        json_data['rating'] = courier.calculate_rating()
-    json_data['earnings'] = courier.calculate_earnings()
-
     return json_service.return_200(json_data)
 
 
@@ -51,8 +46,7 @@ def patch_courier(courier_id):
 
     data = request.json
 
-    validator = jsonschema.Draft7Validator(CourierItem)
-    errors = validator.iter_errors(data)
+    errors = Validator().check_get_courier_validation(data)
     if errors:
         return json_service.return_400()
 
@@ -61,8 +55,6 @@ def patch_courier(courier_id):
         return json_service.return_404()
 
     CourierService.edit_courier(courier, data)
-    intersection_orders = CourierService.get_intersection_orders(courier)
-    OrderService.release_orders(intersection_orders)
 
     return json_service.return_200(courier.to_dict())
 
@@ -73,7 +65,7 @@ def post_order():
 
     orders = request.json
 
-    errors = check_order_validation(orders)
+    errors = Validator().check_post_order_validation(orders)
     if errors:
         return json_service.return_validation_error_answer_400('orders', orders, errors)
 
@@ -104,7 +96,7 @@ def post_order_assign():
     if not new_orders and old_orders:
         orders_idx = []
         for order in old_orders:
-            orders_idx.append({'id': order.order_id})
+            orders_idx.append({'id': order.id})
         return jsonify({'orders': orders_idx,
                         'assign_time':
                             TimeService.get_assign_time_from_datetime(old_orders[0].assign_time)
@@ -113,7 +105,7 @@ def post_order_assign():
     orders_idx = []
     orders = OrderService.refresh_assign_time(courier)
     for order in orders:
-        orders_idx.append({'id': order.order_id})
+        orders_idx.append({'id': order.id})
 
     if orders_idx:
         return jsonify({
@@ -141,4 +133,4 @@ def post_complete_assign():
     if not order.is_complete:
         OrderService.complete_order(order, data['complete_time'])
 
-    return json_service.return_200({'order_id': order.order_id})
+    return json_service.return_200({'order_id': order.id})

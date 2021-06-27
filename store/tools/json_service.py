@@ -2,9 +2,9 @@ from flask import jsonify
 
 
 class JsonService:
-    def __form_400(self, data_type, errors_idxs, error_msgs):
-        return jsonify({'validation_error': {data_type: errors_idxs,
-                                             'error_description': error_msgs}}), 400
+    def __form_400(self, data_type, errors_data):
+        return jsonify({'validation_error': {data_type: errors_data[0],
+                                             'error_description': errors_data[1]}}), 400
 
     def return_400(self):
         return jsonify(), 400
@@ -23,24 +23,25 @@ class JsonService:
         response.status_code = 201
         return response
 
-    def return_courier_logic_error_answer_400(self, errors):
+    def __form_400_error_message(self, errors, message):
         errors_idxs = list()
         error_msgs = list()
         for error_id in errors:
             errors_idxs.append({'id': error_id})
-            error_msgs.append({'id': error_id, 'messages': ['Courier with this id already exist']})
+            error_msgs.append({'id': error_id, 'messages': [message]})
+        return errors_idxs, error_msgs
 
-        return self.__form_400('couriers', errors_idxs, error_msgs)
+    def return_courier_logic_error_answer_400(self, errors):
+        message = 'Courier with this id already exist'
+        error_message_data = self.__form_400_error_message(errors, message)
+        return self.__form_400('couriers', error_message_data)
 
     def return_order_logic_error_answer_400(self, errors):
-        errors_idxs = list()
-        error_msgs = list()
-        for error_id in errors:
-            errors_idxs.append({'id': error_id})
-            error_msgs.append({'id': error_id, 'messages': ['Order with this id already exist']})
+        message = 'Order with this id already exist'
+        error_message_data = self.__form_400_error_message(errors, message)
+        return self.__form_400('orders', error_message_data)
 
-        return self.__form_400('orders', errors_idxs, error_msgs)
-
+    # TODO описать в будущем более универсальную и красивую логику
     def return_validation_error_answer_400(self, data_type, data, errors):
         errors_idxs = list()
         error_msgs = list()
@@ -64,4 +65,4 @@ class JsonService:
             else:
                 error_msgs[-1]['messages'].append(error.message)
 
-        return self.__form_400(data_type, errors_idxs, error_msgs)
+        return self.__form_400(data_type, (errors_idxs, error_msgs))

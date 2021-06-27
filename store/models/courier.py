@@ -1,7 +1,6 @@
 from math import inf
 from typing import List
 
-
 from store import db
 from store.models.completed_order import CompletedOrders
 from store.models.courier_assign_time import CourierAssignTime
@@ -39,6 +38,13 @@ class Courier(db.Model):
                 else:
                     setattr(self, field, data[field])
 
+    def to_dict(self):
+        json_data = self.super.to_dict()
+        if self.completed_orders:
+            json_data['rating'] = self.calculate_rating()
+        json_data['earnings'] = self.calculate_earnings()
+        return json_data
+
     def edit(self, data):
         for field in data:
             if field == 'courier_type':
@@ -75,13 +81,13 @@ class Courier(db.Model):
 
         new_orders = []
         for order in orders:
-            order_assign_times = OrderAssignTime.query.filter(
-                OrderAssignTime.order_id == order.order_id
+            order_assign_times = OrderAssignTime.query.filter_by(
+                order_id=order.id
             ).order_by(OrderAssignTime.time_start_hour, OrderAssignTime.time_start_min,
                        OrderAssignTime.time_finish_hour, OrderAssignTime.time_finish_min).all()
 
             courier_assign_times = CourierAssignTime.query.filter(
-                CourierAssignTime.courier_id == self.courier_id).all()
+                CourierAssignTime.courier_id == self.id).all()
 
             for courier_time in courier_assign_times:
                 for order_time in order_assign_times:
@@ -92,7 +98,7 @@ class Courier(db.Model):
                         elif order_time.time_start_hour >= courier_time.time_finish_hour:
                             continue
 
-                        order.courier_id = self.courier_id
+                        order.courier_id = self.id
                         new_orders.append(order)
                         self.current_weight += order.weight
                         break
@@ -107,19 +113,19 @@ class Courier(db.Model):
 
         not_intersections = []
 
-        orders = Order.query.filter(
-            Order.courier_id == self.courier_id,
-            Order.is_complete == False
+        orders = Order.query.filter_by(
+            courier_id=self.id,
+            is_complete=False
         ).all()
 
         for order in orders:
-            order_assign_times = OrderAssignTime.query.filter(
-                OrderAssignTime.order_id == order.order_id
+            order_assign_times = OrderAssignTime.query.filter_by(
+                order_id=order.id
             ).order_by(OrderAssignTime.time_start_hour, OrderAssignTime.time_start_min,
                        OrderAssignTime.time_finish_hour, OrderAssignTime.time_finish_min).all()
 
-            courier_assign_times = CourierAssignTime.query.filter(
-                CourierAssignTime.courier_id == self.courier_id).all()
+            courier_assign_times = CourierAssignTime.query.filter_by(
+                courier_id=self.courier_id).all()
 
             for courier_time in courier_assign_times:
                 for order_time in order_assign_times:
