@@ -15,13 +15,13 @@ def post_courier():
 
     errors = Validator().check_post_couriers_validation(couriers)
     if errors:
-        return json_service.return_validation_error_answer_400('couriers', couriers, errors)
+        return json_service.return_validation_error_400('couriers', couriers, errors)
 
     success, errors = CourierService.add_couriers(couriers['data'])
     if errors:
         return json_service.return_courier_logic_error_answer_400(errors)
 
-    return json_service.return_answer_201('couriers', success)
+    return json_service.return_201('couriers', success)
 
 
 @app.route('/couriers/<courier_id>', methods=['GET'])
@@ -63,13 +63,13 @@ def post_order():
 
     errors = Validator().check_post_orders_validation(orders)
     if errors:
-        return json_service.return_validation_error_answer_400('orders', orders, errors)
+        return json_service.return_validation_error_400('orders', orders, errors)
 
     success, errors = OrderService.add_orders(orders['data'])
     if errors:
         return json_service.return_order_logic_error_answer_400(errors)
 
-    return json_service.return_answer_201('orders', success)
+    return json_service.return_201('orders', success)
 
 
 @app.route('/orders/assign', methods=['POST'])

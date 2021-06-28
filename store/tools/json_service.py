@@ -4,9 +4,6 @@ from store.tools.time_service import TimeService
 
 
 class JsonService:
-    def __form_400(self, data_type, errors_data):
-        return jsonify({'validation_error': {data_type: errors_data[0],
-                                             'error_description': errors_data[1]}}), 400
 
     def return_400(self):
         return jsonify(), 400
@@ -17,34 +14,26 @@ class JsonService:
     def return_200(self, data):
         return jsonify(data), 200
 
-    def return_answer_201(self, data_type, data):
-        success_idxs = list()
-        for success_id in data:
-            success_idxs.append({'id': success_id})
-        response = jsonify({data_type: success_idxs})
-        response.status_code = 201
-        return response
+    def return_201(self, data_type, data):
+        success_idxs = [{'id': id} for id in data]
+        return jsonify({data_type: success_idxs}), 201
 
     def __form_400_error_message(self, errors, message):
-        errors_idxs = list()
-        error_msgs = list()
-        for error_id in errors:
-            errors_idxs.append({'id': error_id})
-            error_msgs.append({'id': error_id, 'messages': [message]})
+        errors_idxs = [{'id': error_id} for error_id in errors]
+        error_msgs = [{'id': error_id, 'messages': [message]} for error_id in errors]
         return errors_idxs, error_msgs
 
     def return_courier_logic_error_answer_400(self, errors):
         message = 'Courier with this id already exist'
         error_message_data = self.__form_400_error_message(errors, message)
-        return self.__form_400('couriers', error_message_data)
+        return self.__form_400_validation_error('couriers', error_message_data)
 
     def return_order_logic_error_answer_400(self, errors):
         message = 'Order with this id already exist'
         error_message_data = self.__form_400_error_message(errors, message)
-        return self.__form_400('orders', error_message_data)
+        return self.__form_400_validation_error('orders', error_message_data)
 
-    # TODO описать в будущем более универсальную и красивую логику
-    def return_validation_error_answer_400(self, data_type, data, errors):
+    def return_validation_error_400(self, data_type, data, errors):
         errors_idxs = list()
         error_msgs = list()
         for error in errors:
@@ -67,20 +56,25 @@ class JsonService:
             else:
                 error_msgs[-1]['messages'].append(error.message)
 
-        return self.__form_400(data_type, (errors_idxs, error_msgs))
+        return self.__form_400_validation_error(data_type, (errors_idxs, error_msgs))
 
     def return_order_assign_200(self, data):
         if not data:
-            return jsonify({'orders': []}), 200
+            data = {'orders': []}
+            return self.return_200(data)
 
         orders_idx = []
         for order in data:
             orders_idx.append({'id': order.id})
 
-        response = jsonify({'orders': orders_idx,
-                            'assign_time':
-                                TimeService.get_assign_time_from_datetime(data[0].assign_time)
-                            })
+        data = {'orders': orders_idx,
+                'assign_time':
+                    TimeService.get_assign_time_from_datetime(data[0].assign_time)
+                }
+        return self.return_200(data)
 
-        response.status_code = 200
-        return response
+    def __form_400_validation_error(self, data_type, errors_data):
+        return jsonify({'validation_error':
+                            {data_type: errors_data[0],
+                             'error_description':
+                                 errors_data[1]}}), 400
