@@ -10,3 +10,9 @@ class CompletedOrders(db.Model):
     last_complete_time = db.Column(db.DateTime)
     general_complete_seconds = db.Column(db.DECIMAL)
     region = db.Column(db.Integer)
+
+    def update(self, order):
+        total_secs = (order.complete_time - self.last_complete_time).total_seconds()
+        self.completed_orders += 1
+        self.last_complete_time = order.complete_time
+        self.general_complete_seconds += total_secs

@@ -1,7 +1,6 @@
 from store import db
 from store.models.completed_order import CompletedOrders
 from store.models.order import Order
-from store.tools.time_service import TimeService
 
 
 class OrderService:
@@ -37,48 +36,28 @@ class OrderService:
         db.session.commit()
 
     @staticmethod
-    def refresh_assign_time(courier):
-        orders = Order.query.filter(
-            Order.courier_id == courier.id,
-            Order.is_complete == False
-        ).all()
-
-        if orders:
-            assign_time = TimeService().get_assign_time()
-
-            for order in orders:
-                order.assign_time = assign_time
-            db.session.commit()
-
-        return orders
-
-    @staticmethod
-    def complete_order(order, complete_time):
+    def complete_order(new_order, complete_time):
         from store.tools.courier_service import CourierService
 
-        order.is_complete = True
-        order.complete_time = complete_time
-        courier = CourierService.get_courier(order.courier_id)
-        courier.current_weight -= order.weight
+        new_order.complete_order(complete_time)
+        courier = CourierService.get_courier(new_order.courier_id)
+        courier.lose_weight(new_order.weight)
         db.session.commit()
 
-        complete_order = CompletedOrders.query.filter(
-            CompletedOrders.courier_id == order.courier_id,
-            CompletedOrders.region == order.region
+        last_complete_order = CompletedOrders.query.filter_by(
+            courier_id=new_order.courier_id,
+            region=new_order.region
         ).first()
-        if not complete_order:
-            complete_order = CompletedOrders(
-                courier_id=order.courier_id,
+        if not last_complete_order:
+            last_complete_order = CompletedOrders(
+                courier_id=new_order.courier_id,
                 completed_orders=1,
-                last_complete_time=order.complete_time,
-                general_complete_seconds=(order.complete_time - order.assign_time).total_seconds(),
-                region=order.region
+                last_complete_time=new_order.complete_time,
+                general_complete_seconds=(new_order.complete_time - new_order.assign_time).total_seconds(),
+                region=new_order.region
             )
-            db.session.add(complete_order)
+            db.session.add(last_complete_order)
         else:
-            total_secs = (order.complete_time - complete_order.last_complete_time).total_seconds()
-            complete_order.completed_orders += 1
-            complete_order.last_complete_time = order.complete_time
-            complete_order.general_complete_seconds += total_secs
+            last_complete_order.update(new_order)
 
         db.session.commit()

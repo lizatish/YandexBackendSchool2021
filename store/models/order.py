@@ -40,5 +40,9 @@ class Order(db.Model):
         }
         return data
 
+    def complete_order(self, complete_time):
+        self.is_complete = True
+        self.complete_time = complete_time
+
     def get_working_hours(self):
         return [str(assign_time) for assign_time in self.assign_times]

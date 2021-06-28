@@ -38,7 +38,9 @@ class Courier(db.Model):
                 else:
                     setattr(self, field, data[field])
 
-    # TODO может быть сделать через сериализатор?
+    def lose_weight(self, val):
+        self.current_weight -= val
+
     def to_dict(self):
         json_data = {
             'id': self.id,
@@ -70,6 +72,7 @@ class Courier(db.Model):
     def get_working_hours(self):
         return [str(assign_time) for assign_time in self.assign_times]
 
+    # TODO разбить на функции
     def balancer_orders(self):
         orders = Order.query.filter(
             Order.courier_id == None,
@@ -92,9 +95,8 @@ class Courier(db.Model):
                 for order_time in order_assign_times:
                     if self.current_weight + order.weight <= self.max_weight:
 
-                        if courier_time.time_start_hour >= order_time.time_finish_hour:
-                            continue
-                        elif order_time.time_start_hour >= courier_time.time_finish_hour:
+                        if courier_time.time_start_hour >= order_time.time_finish_hour or \
+                                order_time.time_start_hour >= courier_time.time_finish_hour:
                             continue
 
                         order.courier_id = self.id
@@ -108,6 +110,7 @@ class Courier(db.Model):
                     break
         return new_orders
 
+    # TODO разбить на функции
     def check_time_not_intersection(self):
 
         not_intersections = []
