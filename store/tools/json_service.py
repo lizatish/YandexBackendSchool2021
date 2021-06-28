@@ -63,13 +63,10 @@ class JsonService:
             data = {'orders': []}
             return self.return_200(data)
 
-        orders_idx = []
-        for order in data:
-            orders_idx.append({'id': order.id})
-
+        orders_idx = [{'id': order.id} for order in data]
         data = {'orders': orders_idx,
                 'assign_time':
-                    TimeService.get_assign_time_from_datetime(data[0].assign_time)
+                    TimeService().get_assign_time(data[0].assign_time)
                 }
         return self.return_200(data)
 

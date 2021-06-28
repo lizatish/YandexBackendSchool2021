@@ -44,7 +44,7 @@ class OrderService:
         ).all()
 
         if orders:
-            assign_time = TimeService.get_assign_time()
+            assign_time = TimeService().get_assign_time()
 
             for order in orders:
                 order.assign_time = assign_time

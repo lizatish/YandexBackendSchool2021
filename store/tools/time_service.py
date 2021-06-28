@@ -2,10 +2,11 @@ from datetime import datetime
 
 
 class TimeService:
-    @staticmethod
-    def get_assign_time():
-        return datetime.utcnow().strftime('%Y-%m-%dT%-H:%M:%S.%f')[:-4] + 'Z'
+    def __init__(self):
+        self.dt_template = '%Y-%m-%dT%-H:%M:%S.%f'
 
-    @staticmethod
-    def get_assign_time_from_datetime(dt):
-        return dt.strftime('%Y-%m-%dT%-H:%M:%S.%f')[:-4] + 'Z'
+    def __get_time_slice(self, datitime_object):
+        return datitime_object.strftime(self.dt_template)[:-4] + 'Z'
+
+    def get_assign_time(self, dt=datetime.utcnow()):
+        return self.__get_time_slice(dt)

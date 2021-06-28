@@ -42,7 +42,8 @@ class CourierService:
     @staticmethod
     def get_assign_orders(courier):
         orders = courier.balancer_orders()
+        time_service = TimeService()
         for order in orders:
-            order.assign_time = TimeService.get_assign_time()
+            order.assign_time = time_service.get_assign_time()
         db.session.commit()
         return orders
