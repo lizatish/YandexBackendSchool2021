@@ -1,5 +1,5 @@
 from store import db
-from store.models.courier import Courier
+from store.main.models.courier import Courier
 from store.tools.order_service import OrderService
 from store.tools.time_service import TimeService
 

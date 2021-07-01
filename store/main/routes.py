@@ -1,13 +1,13 @@
 from flask import request
 
-from store import app
+from store.main import bp
 from store.tools.courier_service import CourierService
 from store.tools.json_service import JsonService
 from store.tools.order_service import OrderService
 from store.tools.validation import Validator
 
 
-@app.route('/couriers', methods=['POST'])
+@bp.route('/couriers', methods=['POST'])
 def post_courier():
     json_service = JsonService()
 
@@ -24,7 +24,7 @@ def post_courier():
     return json_service.return_201('couriers', success)
 
 
-@app.route('/couriers/<courier_id>', methods=['GET'])
+@bp.route('/couriers/<courier_id>', methods=['GET'])
 def get_courier(courier_id):
     json_service = JsonService()
 
@@ -36,7 +36,7 @@ def get_courier(courier_id):
     return json_service.return_200(json_data)
 
 
-@app.route('/couriers/<courier_id>', methods=['PATCH'])
+@bp.route('/couriers/<courier_id>', methods=['PATCH'])
 def patch_courier(courier_id):
     json_service = JsonService()
 
@@ -55,7 +55,7 @@ def patch_courier(courier_id):
     return json_service.return_200(courier.to_dict())
 
 
-@app.route('/orders', methods=['POST'])
+@bp.route('/orders', methods=['POST'])
 def post_order():
     json_service = JsonService()
 
@@ -72,7 +72,7 @@ def post_order():
     return json_service.return_201('orders', success)
 
 
-@app.route('/orders/assign', methods=['POST'])
+@bp.route('/orders/assign', methods=['POST'])
 def post_order_assign():
     json_service = JsonService()
 
@@ -90,7 +90,7 @@ def post_order_assign():
     return json_service.return_order_assign_200(orders)
 
 
-@app.route('/orders/complete', methods=['POST'])
+@bp.route('/orders/complete', methods=['POST'])
 def post_complete_assign():
     json_service = JsonService()
 

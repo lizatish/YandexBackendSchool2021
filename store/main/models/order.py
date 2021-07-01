@@ -1,7 +1,7 @@
 from typing import List
 
 from store import db
-from store.models.order_assign_time import OrderAssignTime
+from store.main.models.order_assign_time import OrderAssignTime
 
 
 class Order(db.Model):

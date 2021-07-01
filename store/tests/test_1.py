@@ -1,5 +1,5 @@
-from store.models.courier import Courier
-from store.models.order import Order
+from store.main.models.courier import Courier
+from store.main.models.order import Order
 
 
 def test_session(dbsession):
@@ -11,7 +11,7 @@ def test_session(dbsession):
     order1 = Order()
     order1.weight = 100
     order1.region = 12
-    order1.courier_id = courier1.courier_id
+    order1.courier_id = courier1.id
     dbsession.add(order1)
 
     dbsession.commit()

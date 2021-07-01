@@ -1,6 +1,6 @@
 from store import db
-from store.models.completed_order import CompletedOrders
-from store.models.order import Order
+from store.main.models.completed_order import CompletedOrders
+from store.main.models.order import Order
 
 
 class OrderService:

@@ -2,11 +2,11 @@ from math import inf
 from typing import List
 
 from store import db
-from store.models.completed_order import CompletedOrders
-from store.models.courier_assign_time import CourierAssignTime
-from store.models.courier_type import CourierType
-from store.models.order import Order
-from store.models.order_assign_time import OrderAssignTime
+from store.main.models.completed_order import CompletedOrders
+from store.main.models.courier_assign_time import CourierAssignTime
+from store.main.models.courier_type import CourierType
+from store.main.models.order import Order
+from store.main.models.order_assign_time import OrderAssignTime
 
 
 class Courier(db.Model):
