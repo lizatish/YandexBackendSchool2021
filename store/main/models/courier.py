@@ -43,7 +43,7 @@ class Courier(db.Model):
 
     def to_dict(self):
         json_data = {
-            'id': self.id,
+            'courier_id': self.id,
             'courier_type': self.courier_type.value,
             'regions': self.regions,
             'working_hours': self.get_working_hours(),
