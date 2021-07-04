@@ -19,6 +19,9 @@ class Order(db.Model):
 
     assign_times: List[OrderAssignTime] = db.relationship(OrderAssignTime, backref=db.backref('order'))
 
+    def get_weight(self):
+        return float(self.weight)
+
     def from_dict(self, data):
         for field in ['order_id', 'weight', 'region', 'delivery_hours']:
             if field in data:
@@ -31,12 +34,13 @@ class Order(db.Model):
                 else:
                     setattr(self, field, data[field])
 
+    # TODO нужен ли этот метод?
     def to_dict(self):
         data = {
             'id': self.id,
             'weight': self.weight,
             'region': self.region,
-            'working_hours': self.get_working_hours()
+            'delivery_hours': self.get_delivery_hours()
         }
         return data
 
@@ -44,5 +48,5 @@ class Order(db.Model):
         self.is_complete = True
         self.complete_time = complete_time
 
-    def get_working_hours(self):
+    def get_delivery_hours(self):
         return [str(assign_time) for assign_time in self.assign_times]
