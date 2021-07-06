@@ -46,6 +46,7 @@ def patch_courier(courier_id):
     if errors:
         return json_service.return_400()
 
+    # TODO ошибки 404 вообще еще не покрыты тестами
     courier = CourierService.get_courier(courier_id)
     if not courier:
         return json_service.return_404()
