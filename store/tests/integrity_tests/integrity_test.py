@@ -65,15 +65,15 @@ def test_complete_one_valid_order_courier_type_foot(test_client):
 
     courier = Courier.query.get(1)
     assert courier.max_weight == 10
-    assert courier.current_weight == 7
+    assert courier.current_weight == 9
     assert len(courier.orders) == 2
 
     order1 = Order.query.get(1)
-    assert order1.courier_id == None
-    assert order1.assign_time == None
+    assert order1.courier_id == 1
 
     order2 = Order.query.get(2)
-    assert order2.courier_id == 1
+    assert order2.courier_id == None
+    assert order2.assign_time == None
 
     order3 = Order.query.get(3)
     assert order3.courier_id == 1

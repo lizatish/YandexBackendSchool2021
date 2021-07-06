@@ -134,37 +134,39 @@ class Courier(db.Model):
             return intersect_orders.union(intersect_orders)
 
         intersect_orders |= self.check_weight_intersection(active_orders)
+
         return intersect_orders
 
     def check_weight_intersection(self, active_orders):
-        intersect_orders = set()
-        for order in active_orders:
-            if self.current_weight >= self.max_weight:
+        intersect_orders = list()
+        for order in sorted(active_orders, key=lambda order_: order_.weight):
+            if self.current_weight - order.weight <= self.max_weight:
                 self.current_weight -= order.weight
-                intersect_orders.add(order)
-        return intersect_orders
+                intersect_orders.append(order)
+                break
+        return set(intersect_orders)
 
     def check_intersection_by_regions(self, active_orders):
-        intersect_orders = set()
-        for order in active_orders:
+        intersect_orders = list()
+        for order in sorted(active_orders, key=lambda order_: order_.weight):
             if order.region not in self.regions:
-                intersect_orders.add(order)
+                intersect_orders.append(order)
                 self.current_weight -= order.weight
-        return intersect_orders
+        return set(intersect_orders)
 
     def check_intersection_by_working_hours(self, active_orders):
-        intersect_orders = set()
+        intersect_orders = list()
         courier_assign_times = self.get_assign_times()
-        for order in active_orders:
+        for order in sorted(active_orders, key=lambda order_: order_.weight):
             order_assign_times = order.get_assign_times()
             for courier_time in courier_assign_times:
                 for order_time in order_assign_times:
                     if courier_time.time_start_hour >= order_time.time_finish_hour or \
                             order_time.time_start_hour >= courier_time.time_finish_hour:
                         self.current_weight -= order.weight
-                        intersect_orders.add(order)
+                        intersect_orders.append(order)
                         break
-        return intersect_orders
+        return set(intersect_orders)
 
     def get_assign_times(self):
         return CourierAssignTime.query.filter_by(courier_id=self.id).all()
