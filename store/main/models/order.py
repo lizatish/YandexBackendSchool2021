@@ -10,7 +10,7 @@ class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True, unique=True)
     courier_id = db.Column(db.Integer, db.ForeignKey('courier.id'))
 
-    weight = db.Column(db.DECIMAL)
+    weight = db.Column(db.Float)
     region = db.Column(db.Integer)
 
     is_complete = db.Column(db.Boolean, default=False)
@@ -19,8 +19,6 @@ class Order(db.Model):
 
     assign_times: List[OrderAssignTime] = db.relationship(OrderAssignTime, backref=db.backref('order'))
 
-    def get_weight(self):
-        return float(self.weight)
 
     def from_dict(self, data):
         for field in ['order_id', 'weight', 'region', 'delivery_hours']:

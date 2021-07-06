@@ -16,12 +16,16 @@ class Courier(db.Model):
     courier_type = db.Column(db.Enum(CourierType))
     regions = db.Column(db.ARRAY(db.Integer))
 
-    current_weight = db.Column(db.DECIMAL, default=0.0)
+    current_weight = db.Column(db.Float, default=0.0)
     max_weight = db.Column(db.Integer)
 
     orders: List[Order] = db.relationship(Order, backref=db.backref('courier'))
     completed_orders: List[CompletedOrders] = db.relationship(CompletedOrders, backref=db.backref('courier'))
     assign_times: List[CourierAssignTime] = db.relationship(CourierAssignTime, backref=db.backref('courier'))
+
+    def get_weight(self):
+        return float(self.current_weight)
+
 
     def from_dict(self, data):
         for field in ['courier_id', 'courier_type', 'regions', 'working_hours']:

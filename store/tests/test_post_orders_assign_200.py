@@ -45,7 +45,7 @@ def test_assign_one_valid_order(test_client):
     assert len(data.get('orders')) == 1
     assert data.get('orders')[0]['id'] == 1
     assert data.get('assign_time')
-    assert (datetime.utcnow() - TimeService().get_datetime(data.get('assign_time'))).seconds <= 0.1
+    assert (datetime.utcnow() - TimeService().get_datetime(data.get('assign_time'))).seconds <= 5
 
 
 def test_assign_multiple_valid_orders(test_client):
@@ -90,7 +90,7 @@ def test_assign_multiple_valid_orders(test_client):
     assert data.get('orders')[0]['id'] == 1
     assert data.get('orders')[0]['id'] == 1
     assert data.get('assign_time')
-    assert (datetime.utcnow() - TimeService().get_datetime(data.get('assign_time'))).seconds <= 0.1
+    assert (datetime.utcnow() - TimeService().get_datetime(data.get('assign_time'))).seconds <=5
 
 
 def test_assign_one_valid_order_addition_params(test_client):
@@ -125,7 +125,7 @@ def test_assign_one_valid_order_addition_params(test_client):
 
     courier = Courier.query.get(1)
     assert courier.max_weight == 10
-    assert courier.get_weight() == 0.23
+    assert courier.current_weight== 0.23
 
     order = Order.query.get(1)
     assert order.assign_time == TimeService().get_datetime(data.get('assign_time'))
@@ -181,7 +181,7 @@ def test_assign_multiple_valid_orders_addition_params(test_client):
 
     courier = Courier.query.get(1)
     assert courier.max_weight == 10
-    assert courier.get_weight() == 0.23 + 0.23
+    assert courier.current_weight== 0.23 + 0.23
 
     order = Order.query.get(1)
     assert order.assign_time == TimeService().get_datetime(data.get('assign_time'))
@@ -223,7 +223,7 @@ def test_assign_one_valid_order_from_courier_type_bike(test_client):
 
     courier = Courier.query.get(1)
     assert courier.max_weight == 15
-    assert courier.get_weight() == 0.23
+    assert courier.current_weight== 0.23
 
     order = Order.query.get(1)
     assert order.assign_time == TimeService().get_datetime(data.get('assign_time'))
@@ -262,7 +262,7 @@ def test_assign_one_valid_order_from_courier_type_car(test_client):
 
     courier = Courier.query.get(1)
     assert courier.max_weight == 50
-    assert courier.get_weight() == 0.23
+    assert courier.current_weight== 0.23
 
     order = Order.query.get(1)
     assert order.assign_time == TimeService().get_datetime(data.get('assign_time'))
@@ -384,7 +384,7 @@ def test_assign_one_notvalid_on_weight_order_from_courier_type_car(test_client):
     assert len(data) == 2
     assert len(data.get('orders')) == 1
     assert data.get('orders')[0]['id'] == 1
-    assert (datetime.utcnow() - TimeService().get_datetime(data.get('assign_time'))).seconds <= 2
+    assert (datetime.utcnow() - TimeService().get_datetime(data.get('assign_time'))).seconds <= 5
 
     order = Order.query.get(1)
     assert order.courier_id == 1

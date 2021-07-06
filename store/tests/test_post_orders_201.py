@@ -29,7 +29,7 @@ def test_post_one_order_base_data(test_client):
     assert success_orders[0]['id'] == 1
 
     order = Order.query.get(1)
-    assert order.get_weight() == 0.23
+    assert order.weight== 0.23
     assert order.region == 12
     assert order.get_delivery_hours() == ["09:00-18:00"]
 
@@ -56,7 +56,7 @@ def test_post_one_order_base_data2(test_client):
     assert success_orders[0]['id'] == 1
 
     order = Order.query.get(1)
-    assert order.get_weight() == 0.23
+    assert order.weight== 0.23
     assert order.region == 12
     assert order.get_delivery_hours() == ["09:00-11:00", "12:00-18:00"]
 
@@ -83,7 +83,7 @@ def test_post_one_order_base_data3(test_client):
     assert success_orders[0]['id'] == 1
 
     order = Order.query.get(1)
-    assert order.get_weight() == 12
+    assert order.weight== 12
     assert order.region == 12
     assert order.get_delivery_hours() == ["09:00-11:00", "12:00-18:00"]
 
@@ -143,11 +143,11 @@ def test_post_multiple_couriers(test_client):
     assert success_orders[1]['id'] == 2
 
     order = Order.query.get(1)
-    assert order.get_weight() == 12
+    assert order.weight== 12
     assert order.region == 12
     assert order.get_delivery_hours() == ["09:00-11:00", "12:00-18:00"]
 
     order = Order.query.get(2)
-    assert order.get_weight() == 0.1
+    assert order.weight== 0.1
     assert order.region == 1
     assert order.get_delivery_hours() == ["17:00-18:00"]
