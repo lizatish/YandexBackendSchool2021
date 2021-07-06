@@ -32,13 +32,11 @@ class CourierService:
     @staticmethod
     def edit_courier(courier, data):
         courier.edit(data)
-        intersection_orders = CourierService.get_intersection_orders(courier)
+        intersection_orders = courier.check_intersection_with_orders()
         OrderService.release_orders(intersection_orders)
 
-    @staticmethod
-    def get_intersection_orders(courier):
-        return courier.check_time_not_intersection()
 
+    # TODO нужна ли статика?
     @staticmethod
     def get_assign_orders(courier):
         orders = courier.balancer_orders()

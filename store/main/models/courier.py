@@ -26,7 +26,6 @@ class Courier(db.Model):
     def get_weight(self):
         return float(self.current_weight)
 
-
     def from_dict(self, data):
         for field in ['courier_id', 'courier_type', 'regions', 'working_hours']:
             if field in data:
@@ -114,44 +113,61 @@ class Courier(db.Model):
                     break
         return new_orders
 
-    # TODO разбить на функции
-    def check_time_not_intersection(self):
+    def get_active_orders(self):
+        return Order.query.filter_by(courier_id=self.id, is_complete=False).all()
 
-        not_intersections = []
+    # TODO написать тесты на баланс распределения заказов на курьера (все должно работать, но нужны тесты)
+    def check_intersection_with_orders(self):
+        active_orders = set(self.get_active_orders())
+        intersect_orders = set()
 
-        orders = Order.query.filter_by(
-            courier_id=self.id,
-            is_complete=False
-        ).all()
+        intersect_orders |= self.check_intersection_by_regions(active_orders)
+        active_orders -= intersect_orders
 
-        for order in orders:
-            order_assign_times = OrderAssignTime.query.filter_by(
-                order_id=order.id
-            ).order_by(OrderAssignTime.time_start_hour, OrderAssignTime.time_start_min,
-                       OrderAssignTime.time_finish_hour, OrderAssignTime.time_finish_min).all()
+        if self.current_weight <= self.max_weight:
+            return intersect_orders
 
-            courier_assign_times = CourierAssignTime.query.filter_by(
-                courier_id=self.id).all()
+        intersect_orders |= self.check_intersection_by_working_hours(active_orders)
+        active_orders -= intersect_orders
 
+        if self.current_weight <= self.max_weight:
+            return intersect_orders.union(intersect_orders)
+
+        intersect_orders |= self.check_weight_intersection(active_orders)
+        return intersect_orders
+
+    def check_weight_intersection(self, active_orders):
+        intersect_orders = set()
+        for order in active_orders:
+            if self.current_weight >= self.max_weight:
+                self.current_weight -= order.weight
+                intersect_orders.add(order)
+        return intersect_orders
+
+    def check_intersection_by_regions(self, active_orders):
+        intersect_orders = set()
+        for order in active_orders:
+            if order.region not in self.regions:
+                intersect_orders.add(order)
+                self.current_weight -= order.weight
+        return intersect_orders
+
+    def check_intersection_by_working_hours(self, active_orders):
+        intersect_orders = set()
+        courier_assign_times = self.get_assign_times()
+        for order in active_orders:
+            order_assign_times = order.get_assign_times()
             for courier_time in courier_assign_times:
                 for order_time in order_assign_times:
-                    if self.current_weight + order.weight >= self.max_weight:
-                        not_intersections.append(order)
+                    if courier_time.time_start_hour >= order_time.time_finish_hour or \
+                            order_time.time_start_hour >= courier_time.time_finish_hour:
                         self.current_weight -= order.weight
+                        intersect_orders.add(order)
                         break
+        return intersect_orders
 
-                    if courier_time.time_start_hour >= order_time.time_finish_hour:
-                        self.current_weight -= order.weight
-                        not_intersections.append(order)
-                        break
-                    elif order_time.time_start_hour >= courier_time.time_finish_hour:
-                        self.current_weight -= order.weight
-                        not_intersections.append(order)
-                        break
-                if order in not_intersections:
-                    break
-
-        return not_intersections
+    def get_assign_times(self):
+        return CourierAssignTime.query.filter_by(courier_id=self.id).all()
 
     def calculate_rating(self):
         t = inf
