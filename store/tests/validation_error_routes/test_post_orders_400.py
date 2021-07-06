@@ -517,6 +517,29 @@ def test_post_one_order_with_another_type_delivery_hours2(test_client):
     assert orders[0]['id'] == 1
 
 
+def test_post_one_order_with_empty_delivery_hours3(test_client):
+    data = {
+        "data": [
+            {
+                "order_id": 1,
+                "weight": 21.1,
+                "region": 12,
+                "delivery_hours": ['']
+            }
+        ]
+    }
+
+    response = test_client.post(ROUTE, headers=HEADERS, data=json.dumps(data))
+    assert response.status_code == 400
+
+    data = ast.literal_eval(response.data.decode("UTF-8"))
+    validation_data = data.get('validation_error')
+    assert validation_data
+    orders = validation_data.get('orders')
+    assert len(orders) == 1
+    assert orders[0]['id'] == 1
+
+
 def test_post_one_order_with_another_type_delivery_hours3(test_client):
     data = {
         "data": [

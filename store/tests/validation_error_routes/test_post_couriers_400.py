@@ -312,6 +312,29 @@ def test_post_one_courier_with_int_courier_type(test_client):
     assert couriers[0]['id'] == 1
 
 
+def test_post_one_courier_with_empty_courier_type(test_client):
+    data = {
+        "data": [
+            {
+                "courier_id": 1,
+                "courier_type": '',
+                "regions": [1, 12, 22],
+                "working_hours": ["11:35-14:05", "09:00-11:00"]
+            }
+        ]
+    }
+
+    response = test_client.post(ROUTE, headers=HEADERS, data=json.dumps(data))
+    assert response.status_code == 400
+
+    data = ast.literal_eval(response.data.decode("UTF-8"))
+    validation_data = data.get('validation_error')
+    assert validation_data
+    couriers = validation_data.get('couriers')
+    assert len(couriers) == 1
+    assert couriers[0]['id'] == 1
+
+
 def test_post_one_courier_with_list_courier_type(test_client):
     data = {
         "data": [
@@ -435,6 +458,29 @@ def test_post_one_courier_with_empty_working_hours(test_client):
                 "courier_type": "foot",
                 "regions": [1, 12, 22],
                 "working_hours": []
+            }
+        ]
+    }
+
+    response = test_client.post(ROUTE, headers=HEADERS, data=json.dumps(data))
+    assert response.status_code == 400
+
+    data = ast.literal_eval(response.data.decode("UTF-8"))
+    validation_data = data.get('validation_error')
+    assert validation_data
+    couriers = validation_data.get('couriers')
+    assert len(couriers) == 1
+    assert couriers[0]['id'] == 1
+
+
+def test_post_one_courier_with_empty_working_hours2(test_client):
+    data = {
+        "data": [
+            {
+                "courier_id": 1,
+                "courier_type": "foot",
+                "regions": [1, 12, 22],
+                "working_hours": ['']
             }
         ]
     }
