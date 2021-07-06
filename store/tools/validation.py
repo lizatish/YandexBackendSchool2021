@@ -37,6 +37,8 @@ class Validator:
 
         def is_time_interval(checker, inst):
             try:
+                if not isinstance(inst, str):
+                    raise ValueError
                 date = inst.split('-')
                 if len(date) != 2:
                     raise ValueError
