@@ -140,11 +140,16 @@ class Courier(db.Model):
     def check_weight_intersection(self, active_orders):
         intersect_orders = list()
         for order in sorted(active_orders, key=lambda order_: order_.weight):
-            if self.current_weight - order.weight <= self.max_weight:
+            if self.current_weight > self.max_weight:
                 self.current_weight -= order.weight
                 intersect_orders.append(order)
-                break
-        return set(intersect_orders)
+
+        deleted_orders = set()
+        for order in intersect_orders:
+            if self.current_weight + order.weight <= self.max_weight:
+                self.current_weight += order.weight
+                deleted_orders.add(order)
+        return set(intersect_orders) - deleted_orders
 
     def check_intersection_by_regions(self, active_orders):
         intersect_orders = list()
