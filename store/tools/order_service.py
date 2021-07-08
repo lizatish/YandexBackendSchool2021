@@ -41,7 +41,7 @@ class OrderService:
 
         new_order.complete_order(complete_time)
         courier = CourierService.get_courier(new_order.courier_id)
-        courier.lose_weight(new_order.weight)
+        courier.complete_order(new_order)
         db.session.commit()
 
         last_complete_order = CompletedOrders.query.filter_by(

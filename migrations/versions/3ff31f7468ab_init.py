@@ -23,7 +23,7 @@ def upgrade():
     sa.Column('type', sa.String(length=30), nullable=True),
     sa.Column('regions', sa.ARRAY(sa.Integer()), nullable=True),
     sa.Column('working_hours', sa.ARRAY(sa.String(length=30)), nullable=True),
-    sa.Column('rating', sa.DECIMAL(), nullable=True),
+    sa.Column('rating', sa.Float(), nullable=True),
     sa.Column('earnings', sa.Integer(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )

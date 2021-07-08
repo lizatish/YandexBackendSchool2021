@@ -37,16 +37,6 @@ class Order(db.Model):
                 else:
                     setattr(self, field, data[field])
 
-    # TODO нужен ли этот метод?
-    def to_dict(self):
-        data = {
-            'id': self.id,
-            'weight': self.weight,
-            'region': self.region,
-            'delivery_hours': self.get_delivery_hours()
-        }
-        return data
-
     def complete_order(self, complete_time):
         self.is_complete = True
         self.complete_time = complete_time

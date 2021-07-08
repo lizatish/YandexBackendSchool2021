@@ -19,6 +19,8 @@ class Courier(db.Model):
     current_weight = db.Column(db.Float, default=0.0)
     max_weight = db.Column(db.Integer)
 
+    earnings = db.Column(db.Float, default=0.0)
+
     orders: List[Order] = db.relationship(Order, backref=db.backref('courier'))
     completed_orders: List[CompletedOrders] = db.relationship(CompletedOrders, backref=db.backref('courier'))
     assign_times: List[CourierAssignTime] = db.relationship(CourierAssignTime, backref=db.backref('courier'))
@@ -41,8 +43,9 @@ class Courier(db.Model):
                 else:
                     setattr(self, field, data[field])
 
-    def lose_weight(self, val):
-        self.current_weight -= val
+    def complete_order(self, order):
+        self.current_weight -= order.weight
+        self.calculate_earnings()
 
     def to_dict(self):
         json_data = {
@@ -53,7 +56,7 @@ class Courier(db.Model):
         }
         if self.completed_orders:
             json_data['rating'] = self.calculate_rating()
-        json_data['earnings'] = self.calculate_earnings()
+        json_data['earnings'] = self.earnings
         return json_data
 
     def edit(self, data):
@@ -124,16 +127,11 @@ class Courier(db.Model):
         intersect_orders |= self.check_intersection_by_regions(active_orders)
         active_orders -= intersect_orders
 
-        if self.current_weight <= self.max_weight:
-            return intersect_orders
-
         intersect_orders |= self.check_intersection_by_working_hours(active_orders)
         active_orders -= intersect_orders
 
-        if self.current_weight <= self.max_weight:
-            return intersect_orders.union(intersect_orders)
-
-        intersect_orders |= self.check_weight_intersection(active_orders)
+        if self.current_weight > self.max_weight:
+            intersect_orders |= self.check_weight_intersection(active_orders)
 
         return intersect_orders
 
@@ -164,14 +162,25 @@ class Courier(db.Model):
         courier_assign_times = self.get_assign_times()
         for order in sorted(active_orders, key=lambda order_: order_.weight):
             order_assign_times = order.get_assign_times()
-            for courier_time in courier_assign_times:
-                for order_time in order_assign_times:
-                    if courier_time.time_start_hour >= order_time.time_finish_hour or \
-                            order_time.time_start_hour >= courier_time.time_finish_hour:
-                        self.current_weight -= order.weight
-                        intersect_orders.append(order)
-                        break
+
+            is_intersect = self.__check_intersection_by_assign_time(courier_assign_times, order_assign_times)
+            if is_intersect:
+                self.current_weight -= order.weight
+                intersect_orders.append(order)
+
         return set(intersect_orders)
+
+    def __check_intersection_by_assign_time(self, courier_assign_times, order_assign_times):
+        for courier_time in courier_assign_times:
+            for order_time in order_assign_times:
+                if not ((courier_time.time_start_hour > order_time.time_finish_hour) or
+                        (order_time.time_start_hour > courier_time.time_finish_hour) or
+                        (courier_time.time_start_hour == order_time.time_finish_hour and
+                         courier_time.time_start_min >= order_time.time_finish_min) or
+                        (order_time.time_start_hour == courier_time.time_finish_hour and
+                         order_time.time_start_min >= courier_time.time_finish_min)):
+                    return False
+        return True
 
     def get_assign_times(self):
         return CourierAssignTime.query.filter_by(courier_id=self.id).all()
@@ -185,10 +194,4 @@ class Courier(db.Model):
         return float(f"{rating:.2f}")
 
     def calculate_earnings(self):
-        sum_orders = 0
-        if not self.completed_orders:
-            return sum_orders
-
-        for order in self.completed_orders:
-            sum_orders += 500 * order.completed_orders * CourierType.get_coefficient(self.courier_type)
-        return sum_orders
+        self.earnings += 500 * CourierType.get_coefficient(self.courier_type)

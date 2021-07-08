@@ -404,4 +404,3 @@ def test_patch_many_fields2(test_client):
     assert courier.courier_type == CourierType.CAR
     assert courier.regions == [1, 12]
     assert courier.get_working_hours() == ["08:00-13:00"]
-# TODO добавить интеграцию, как изменяется количество заказов при изменении типа курьера
