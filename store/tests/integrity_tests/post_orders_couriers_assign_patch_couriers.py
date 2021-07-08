@@ -1298,7 +1298,8 @@ def test_patch_courier_with_assign_orders_change_courier_type_and_working_hours2
     assert courier.current_weight == 8.1
     assert len(courier.orders) == 2
 
-def test_patch_courier_with_assign_orders_change_rigion_and_working_hours(test_client):
+
+def test_patch_courier_with_assign_orders_change_rigion_and_courier_type(test_client):
     data = {
         "data": [
             {
@@ -1354,7 +1355,8 @@ def test_patch_courier_with_assign_orders_change_rigion_and_working_hours(test_c
     assert courier.current_weight == 8
     assert len(courier.orders) == 1
 
-def test_patch_courier_with_assign_orders_change_rigion_and_working_hours2(test_client):
+
+def test_patch_courier_with_assign_orders_change_rigion_and_courier_type2(test_client):
     data = {
         "data": [
             {
@@ -1408,4 +1410,234 @@ def test_patch_courier_with_assign_orders_change_rigion_and_working_hours2(test_
 
     courier = Courier.query.get(1)
     assert courier.current_weight == 12
+    assert len(courier.orders) == 1
+
+
+def test_patch_courier_with_assign_orders_change_rigion_and_courier_type3(test_client):
+    data = {
+        "data": [
+            {
+                "courier_id": 1,
+                "courier_type": "car",
+                "regions": [1, 12, 4],
+                "working_hours": ["11:35-14:05", "12:00-18:00"]
+            }
+        ]
+    }
+    _ = test_client.post('couriers', headers=HEADERS, data=json.dumps(data))
+    data = {
+        "data": [
+            {
+                "order_id": 1,
+                "weight": 18,
+                "region": 1,
+                "delivery_hours": ["17:00-18:00"]
+            },
+            {
+                "order_id": 2,
+                "weight": 12,
+                "region": 12,
+                "delivery_hours": ["09:00-12:00"]
+            },
+            {
+                "order_id": 3,
+                "weight": 10,
+                "region": 4,
+                "delivery_hours": ["17:00-18:00", "9:00-11:00"]
+            }
+        ]
+    }
+    _ = test_client.post('orders', headers=HEADERS, data=json.dumps(data))
+
+    data = {
+        "courier_id": 1
+    }
+    response = test_client.post('orders/assign', headers=HEADERS, data=json.dumps(data))
+    assert response.status_code == 200
+    data = ast.literal_eval(response.data.decode("UTF-8"))
+    assert len(data) == 2
+    assert len(data.get('orders')) == 3
+
+    data = {
+        "regions": [12, 4],
+        "courier_type": "foot"
+    }
+    response = test_client.patch('couriers/1', headers=HEADERS, data=json.dumps(data))
+    assert response.status_code == 200
+
+    courier = Courier.query.get(1)
+    assert courier.current_weight == 10
+    assert len(courier.orders) == 1
+
+
+def test_patch_courier_with_assign_orders_change_courier_type_region_and_working_hours(test_client):
+    data = {
+        "data": [
+            {
+                "courier_id": 1,
+                "courier_type": "car",
+                "regions": [1, 12, 4],
+                "working_hours": ["11:35-14:05", "12:00-18:00"]
+            }
+        ]
+    }
+    _ = test_client.post('couriers', headers=HEADERS, data=json.dumps(data))
+    data = {
+        "data": [
+            {
+                "order_id": 1,
+                "weight": 18,
+                "region": 1,
+                "delivery_hours": ["17:00-18:00"]
+            },
+            {
+                "order_id": 2,
+                "weight": 12,
+                "region": 12,
+                "delivery_hours": ["09:00-12:00"]
+            },
+            {
+                "order_id": 3,
+                "weight": 10,
+                "region": 4,
+                "delivery_hours": ["17:00-18:00", "9:00-11:00"]
+            }
+        ]
+    }
+    _ = test_client.post('orders', headers=HEADERS, data=json.dumps(data))
+
+    data = {
+        "courier_id": 1
+    }
+    response = test_client.post('orders/assign', headers=HEADERS, data=json.dumps(data))
+    assert response.status_code == 200
+    data = ast.literal_eval(response.data.decode("UTF-8"))
+    assert len(data) == 2
+    assert len(data.get('orders')) == 3
+
+    data = {
+        "regions": [12, 4],
+        "courier_type": "foot",
+        "working_hours": ["11:35-14:05"]
+    }
+    response = test_client.patch('couriers/1', headers=HEADERS, data=json.dumps(data))
+    assert response.status_code == 200
+
+    courier = Courier.query.get(1)
+    assert courier.current_weight == 0
+    assert len(courier.orders) == 0
+
+
+def test_patch_courier_with_assign_orders_change_courier_type_region_and_working_hours2(test_client):
+    data = {
+        "data": [
+            {
+                "courier_id": 1,
+                "courier_type": "car",
+                "regions": [1, 12, 4],
+                "working_hours": ["11:35-14:05", "12:00-18:00"]
+            }
+        ]
+    }
+    _ = test_client.post('couriers', headers=HEADERS, data=json.dumps(data))
+    data = {
+        "data": [
+            {
+                "order_id": 1,
+                "weight": 11,
+                "region": 1,
+                "delivery_hours": ["17:00-18:00"]
+            },
+            {
+                "order_id": 2,
+                "weight": 2,
+                "region": 12,
+                "delivery_hours": ["09:00-12:00"]
+            },
+            {
+                "order_id": 3,
+                "weight": 1,
+                "region": 4,
+                "delivery_hours": ["17:00-18:00", "9:00-11:00"]
+            }
+        ]
+    }
+    _ = test_client.post('orders', headers=HEADERS, data=json.dumps(data))
+
+    data = {
+        "courier_id": 1
+    }
+    response = test_client.post('orders/assign', headers=HEADERS, data=json.dumps(data))
+    assert response.status_code == 200
+    data = ast.literal_eval(response.data.decode("UTF-8"))
+    assert len(data) == 2
+    assert len(data.get('orders')) == 3
+
+    data = {
+        "regions": [12, 4],
+        "courier_type": "foot",
+        "working_hours": ["9:35-11:05"]
+    }
+    response = test_client.patch('couriers/1', headers=HEADERS, data=json.dumps(data))
+    assert response.status_code == 200
+
+    courier = Courier.query.get(1)
+    assert courier.current_weight == 3
+    assert len(courier.orders) == 2
+
+def test_patch_courier_with_assign_orders_change_courier_type_region_and_working_hours3(test_client):
+    data = {
+        "data": [
+            {
+                "courier_id": 1,
+                "courier_type": "bike",
+                "regions": [1, 12, 4],
+                "working_hours": ["11:35-14:05", "12:00-18:00"]
+            }
+        ]
+    }
+    _ = test_client.post('couriers', headers=HEADERS, data=json.dumps(data))
+    data = {
+        "data": [
+            {
+                "order_id": 1,
+                "weight": 11,
+                "region": 1,
+                "delivery_hours": ["17:00-18:00"]
+            },
+            {
+                "order_id": 2,
+                "weight": 2,
+                "region": 12,
+                "delivery_hours": ["09:00-12:00"]
+            },
+            {
+                "order_id": 3,
+                "weight": 1,
+                "region": 4,
+                "delivery_hours": ["17:00-18:00", "9:00-11:00"]
+            }
+        ]
+    }
+    _ = test_client.post('orders', headers=HEADERS, data=json.dumps(data))
+
+    data = {
+        "courier_id": 1
+    }
+    response = test_client.post('orders/assign', headers=HEADERS, data=json.dumps(data))
+    assert response.status_code == 200
+    data = ast.literal_eval(response.data.decode("UTF-8"))
+    assert len(data) == 2
+    assert len(data.get('orders')) == 3
+
+    data = {
+        "regions": [12, 4],
+        "courier_type": "car",
+        "working_hours": ["11:35-16:05"]
+    }
+    response = test_client.patch('couriers/1', headers=HEADERS, data=json.dumps(data))
+    assert response.status_code == 200
+
+    courier = Courier.query.get(1)
+    assert courier.current_weight == 2
     assert len(courier.orders) == 1
