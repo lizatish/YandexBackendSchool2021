@@ -40,4 +40,3 @@ def test_get_one_courier(test_client):
     assert courier.regions == [1, 12, 22]
     assert courier.get_working_hours() == ["11:35-14:05", "09:00-11:00"]
 
-# TODO написать тест гета после того, как курьер выполнил заказы

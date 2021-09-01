@@ -130,6 +130,9 @@ class Courier(db.Model):
         intersect_orders |= self.check_intersection_by_working_hours(active_orders)
         active_orders -= intersect_orders
 
+
+
+
         if self.current_weight > self.max_weight:
             intersect_orders |= self.check_weight_intersection(active_orders)
 
